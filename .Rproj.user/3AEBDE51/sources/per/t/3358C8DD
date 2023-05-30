@@ -1,0 +1,26 @@
+{
+    "id": "3358C8DD",
+    "path": "~/OCUC/fndr_applicacion/fndr_aplicacion_dissolve/fndr_shapes/scripts/99-qgisprocess.R",
+    "project_path": "scripts/99-qgisprocess.R",
+    "type": "r_source",
+    "hash": "2912955931",
+    "contents": "",
+    "dirty": false,
+    "created": 1685467208880.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "5,0",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1684532624,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1684532624,
+    "read_only": false,
+    "read_only_alternatives": []
+}
