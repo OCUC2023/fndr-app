@@ -120,8 +120,8 @@ hc_ddd <- function(ddd){
       allowPointDrilldown = TRUE,
       series = list_parse(ddd2)
     ) |>
-    hc_xAxis(title = list(text = NULL)) |>
-    hc_yAxis(title = list(text = NULL))
+    hc_xAxis(title = list(text = "")) |>
+    hc_yAxis(title = list(text = ""))
 
 }
 
