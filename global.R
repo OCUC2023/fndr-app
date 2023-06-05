@@ -101,6 +101,7 @@ hc_ddd <- function(ddd){
 
   ddd2 <- ddd |>
     ungroup() |>
+    arrange(desc(value)) |>
     group_nest(v1) |>
     mutate(
       id = v1,
