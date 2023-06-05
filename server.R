@@ -68,7 +68,8 @@ function(input, output, session) {
     # data_filtrada()
     # data |>
     data_filtrada() |>
-      count(etapa) |>
+      count(etapa, sort = TRUE) |>
+      mutate(etapa = fct_inorder(etapa)) |>
       hchart("pie", name = "Etapa", hcaes(name = etapa, y = n)) |>
       hc_tooltip(shared = TRUE) |>
       hc_plotOptions(
