@@ -107,7 +107,7 @@ function(input, output, session) {
     data_filtrada |>
       get_ddd("ano_de_ingreso", "etapa", "uno") |>
       mutate(
-        v1 = as.character(v1),
+        # v1 = as.character(v1),
         v2 = fct_reorder(v2, value, sum, .desc = TRUE),
         ) |>
       hchart(
@@ -116,8 +116,8 @@ function(input, output, session) {
         stacking = 'normal'
       ) |>
       hc_tooltip(table = TRUE, sort = TRUE) |>
-      hc_xAxis(title = list(text = NULL)) |>
-      hc_yAxis(title = list(text = NULL))
+      hc_xAxis(title = list(text = "")) |>
+      hc_yAxis(title = list(text = ""))
 
   })
 
@@ -214,9 +214,7 @@ function(input, output, session) {
         eje_programa_de_gobierno, area_dentro_del_eje,
         monto_aprobado,
         ) |>
-      rename_all(~ str_replace_all(.x, "_", " "))
-
-    d
+      rename_all(~ str_to_title(str_replace_all(.x, "_", " ")))
 
     d |>
       DT::datatable(
