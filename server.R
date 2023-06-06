@@ -87,18 +87,21 @@ function(input, output, session) {
   # home charts -------------------------------------------------------------
   output$home_chart_proy_sector <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("sector", "sub_sector", "uno") |> hc_ddd()
+    data_filtrada |> get_ddd("sector", "sub_sector", "uno") |> hc_ddd() |>
+      hc_subtitle(text = "Secto/Subsector")
 
-  })
-
-  output$home_chart_proy_prov <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("provincia_s", "comuna_s", "uno") |> hc_ddd()
   })
 
   output$home_chart_proy_eje <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |> hc_ddd()
+    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |> hc_ddd() |>
+    hc_subtitle(text = "Eje/Área")
+  })
+
+  output$home_chart_proy_prov <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |> get_ddd("provincia_s", "comuna_s", "uno") |> hc_ddd() |>
+      hc_subtitle(text = "Provincia/Comuna")
   })
 
   output$home_chart_etapa_anio <- renderHighchart({
@@ -117,7 +120,8 @@ function(input, output, session) {
       ) |>
       hc_tooltip(table = TRUE, sort = TRUE) |>
       hc_xAxis(title = list(text = "")) |>
-      hc_yAxis(title = list(text = ""))
+      hc_yAxis(title = list(text = "")) |>
+      hc_subtitle(text = "Años/Etapa")
 
   })
 
