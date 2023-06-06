@@ -88,7 +88,7 @@ function(input, output, session) {
   output$home_chart_proy_sector <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |> get_ddd("sector", "sub_sector", "uno") |> hc_ddd() |>
-      hc_subtitle(text = "Secto/Subsector")
+      hc_subtitle(text = "Sector/Subsector")
 
   })
 
