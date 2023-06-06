@@ -90,7 +90,7 @@ get_ddd <- function(data, var1 = "provincia_s", var2 = "comuna_s", var2sum = "un
   ddd
 }
 
-hc_ddd <- function(ddd){
+hc_ddd <- function(ddd, name = "", ...){
 
   ddd1 <- ddd |>
     group_by(v1) |>
@@ -114,17 +114,24 @@ hc_ddd <- function(ddd){
   hchart(
     ddd1,
     type = "column",
+    name = name,
     hcaes(x = v1, y = value, drilldown = v1)
   ) |>
     hc_drilldown(
       allowPointDrilldown = TRUE,
-      series = list_parse(ddd2)
+      series = list_parse(ddd2),
+      activeAxisLabelStyle = list(
+        textDecoration = 'none',
+        fontStyle = 'normal',
+        color = 'gray'
+      )
     ) |>
     hc_xAxis(title = list(text = "")) |>
     hc_yAxis(title = list(text = ""))
 
 }
 
+# hc_ddd(ddd, name = "Provincia")
 
 # inputs (dependen de data) -----------------------------------------------
 sidebar_content <- tagList(
