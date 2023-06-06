@@ -12,7 +12,7 @@ page_navbar(
     title = "Resumen",
     icon  = icon("chart-line"),
     layout_column_wrap(
-      width = 1/4,
+      width = 1/2,
       fillable = TRUE,
       # height = 100,
       value_box(
