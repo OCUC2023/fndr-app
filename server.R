@@ -87,20 +87,20 @@ function(input, output, session) {
   # home charts -------------------------------------------------------------
   output$home_chart_proy_sector <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("sector", "sub_sector", "uno") |> hc_ddd() |>
+    data_filtrada |> get_ddd("sector", "sub_sector", "uno") |> hc_ddd(name = "Sector") |>
       hc_subtitle(text = "Sector/Subsector")
 
   })
 
   output$home_chart_proy_eje <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |> hc_ddd() |>
+    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |> hc_ddd(name = "Eje") |>
     hc_subtitle(text = "Eje/Área")
   })
 
   output$home_chart_proy_prov <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("provincia_s", "comuna_s", "uno") |> hc_ddd() |>
+    data_filtrada |> get_ddd("provincia_s", "comuna_s", "uno") |> hc_ddd(name = "Provincia") |>
       hc_subtitle(text = "Provincia/Comuna")
   })
 
