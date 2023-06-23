@@ -16,7 +16,7 @@ page_navbar(
       fillable = TRUE,
       # height = 100,
       value_box(
-        title = "Proyectos",
+        title = "Iniciativas",
         value = tags$h1(textOutput("home_proyectos_value")),
         showcase = bs_icon("building")
       ),
@@ -24,7 +24,7 @@ page_navbar(
         title = "Etapa",
         value = tags$h1(textOutput("home_etapa")),
         showcase = highchartOutput("home_etapa_chart"),
-        showcase_layout = showcase_left_center(max_height = "200px"),
+        showcase_layout = showcase_left_center(max_height = "100%"),
         full_screen = TRUE
       ),
     ),
@@ -48,8 +48,14 @@ page_navbar(
     leafletOutput("mapa_main")
   ),
   nav_panel(
-    title = "Listado proyectos",
+    title = "Listado iniciativas",
     icon  = icon("table"),
     DT::dataTableOutput("tabla_main")
+  ),
+  nav_panel(
+    title = "Acerca de",
+    icon  = icon("question-circle"),
+    "No tenemos mucha información..."
+    # DT::dataTableOutput("tabla_main")
   )
 )

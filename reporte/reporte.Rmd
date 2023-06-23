@@ -1,0 +1,175 @@
+---
+title: "Reporte"
+author: "FNDapp"
+output: 
+  pdf_document:
+    toc: true
+params:
+  bips: NA
+  time: NA
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(showtext)
+library(ggfittext)
+library(scales)
+
+font_add_google("Bentham", "bentham")
+showtext_auto()
+
+theme_set(
+  theme_minimal(base_size = 10) +
+    theme(legend.position = "bottom")
+  )
+
+message(here::here("data/data.rds"))
+
+data <- readRDS(here::here("data/data.rds"))
+data <- data |> filter(codigo %in% params$bips)
+
+fndr_pars <- list(
+  primary   = "#006FB3",
+  secondary = "#FE6565",
+  info      = "#F0F0F0",
+  font      = "Roboto",
+  font_head = "Roboto Slab",
+  font_sys  = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
+)
+
+comma_cl <- purrr::partial(scales::comma,  big.mark = ".", decimal.mark = ",")
+```
+
+## Resumen Informe Iniciativas
+
+```{r}
+nobs <- str_glue("{comma_cl(nrow(data))} iniciativas seleccionadas.")
+nper <- str_glue("Iniciativas entre {min(data$ano_de_ingreso )} a {max(data$ano_de_ingreso)}.")
+mont <- str_glue("Valor medio de iniciativas es {comma_cl(mean(data$monto_aprobado, na.rm = TRUE), suffix =\"MM\")} de pesos.")
+etap <- str_glue("{percent(mean(data$etapa == \"Ejecucion\", na.rm = TRUE), suffix = '\\\\%')} de las iniciativas en etapa de Ejecución.")
+```
+
+Se describen resúmenes de las inciativas consideradas para el informe.
+
+\begin{description}
+
+  \item[Iniciativas:] `r nobs`
+  \item[Periodos:]    `r nper`
+  \item[Monto:]       `r mont`
+  \item[Etapa:]       `r etap`
+  
+\end{description}
+
+## Etapa por año
+
+```{r}
+data |>
+  count(ano_de_ingreso, etapa, sort = TRUE) |> 
+  mutate(etapa = fct_inorder(etapa)) |> 
+  ggplot(aes(ano_de_ingreso, n, fill = etapa)) +
+  geom_col() +
+  scale_y_continuous(labels = comma_cl) +
+  scale_fill_manual(
+    values = as.vector(c(as_vector(fndr_pars[c("primary", "secondary")]), "gray30", "gray60"))
+  ) +
+  labs(
+    fill = NULL,
+    x = NULL,
+    y = "Iniciativas"
+    )
+```
+
+
+## Sector/Subsector
+
+```{r}
+ns <- data |> 
+  count(sector, sort = TRUE) |> 
+  nrow()
+
+ns_bool <- ifelse(ns == 1, FALSE, TRUE)
+```
+
+
+```{r include=ns_bool}
+data |> 
+  count(sector, sort = TRUE) |> 
+  arrange(n) |> 
+  mutate(sector = fct_inorder(sector)) |> 
+  ggplot(aes(sector, n)) +
+  geom_col(fill = fndr_pars$primary, width = 0.5) +
+  ggfittext::geom_bar_text(aes(label = comma_cl(n)), size = 10) +
+  scale_y_continuous(labels = comma_cl) +
+  coord_flip() +
+  labs(
+    x = "Sector iniciativa",
+    y = "Cantidad iniciativas",
+    title = "Iniciativas por sector"
+  )
+```
+
+```{r}
+data |> 
+  count(sector, sub_sector, sort = TRUE) |> 
+  mutate(sector = fct_inorder(sector)) |> 
+  ggplot(aes(sub_sector, n)) +
+  geom_col(fill = fndr_pars$primary, width = 0.5) +
+  facet_wrap(vars(sector), scales = "free") +
+  scale_x_discrete(labels = function(x) str_wrap(str_trunc(x, width = 20), width = 10)) +
+  scale_y_continuous(labels = comma_cl) +
+  # ggfittext::geom_bar_text(aes(label = comma(n)), size = 10) +
+  labs(
+    x = "Subsector iniciativa",
+    y = "Cantidad iniciativas",
+    title = "Iniciativas por sector"
+  )
+```
+
+## Eje y Área de Gobierno
+
+## Sector/Subsector
+
+```{r}
+ne <- data |> 
+  count(eje_programa_de_gobierno, sort = TRUE) |> 
+  nrow()
+
+ne_bool <- ifelse(ne == 1, FALSE, TRUE)
+```
+
+
+```{r include=ne_bool}
+data |> 
+  count(eje_programa_de_gobierno, sort = TRUE) |> 
+  arrange(n) |> 
+  mutate(eje_programa_de_gobierno = fct_inorder(eje_programa_de_gobierno)) |> 
+  ggplot(aes(eje_programa_de_gobierno, n)) +
+  geom_col(fill = fndr_pars$secondary, width = 0.5) +
+  ggfittext::geom_bar_text(aes(label = comma_cl(n)), size = 10) +
+  scale_y_continuous(labels = comma_cl) +
+  coord_flip() +
+  labs(
+    x = "Eje iniciativa",
+    y = "Cantidad iniciativas",
+    title = "Iniciativas por sector"
+  )
+```
+
+```{r}
+data |> 
+  count(eje_programa_de_gobierno, area_dentro_del_eje, sort = TRUE) |> 
+  mutate(eje_programa_de_gobierno = fct_inorder(eje_programa_de_gobierno)) |> 
+  ggplot(aes(area_dentro_del_eje, n)) +
+  geom_col(fill = fndr_pars$secondary, width = 0.5) +
+  facet_wrap(vars(eje_programa_de_gobierno), scales = "free") +
+  scale_y_continuous(labels = comma_cl) +
+  scale_x_discrete(labels = function(x) str_wrap(str_trunc(x, width = 20), width = 10)) +
+  labs(
+    x = "Área dentro del eje",
+    y = "Cantidad iniciativas",
+    title = "Iniciativas por sector"
+  )
+```

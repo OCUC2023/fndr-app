@@ -58,7 +58,7 @@ function(input, output, session) {
     nr <- nrow(d)
     tagList(
       icon("filter"),
-      str_glue("{fmt_coma(nr)} proyectos seleccionados.")
+      str_glue("{fmt_coma(nr)} iniciativas seleccionadas.")
       )
   })
 
@@ -87,7 +87,9 @@ function(input, output, session) {
   # home charts -------------------------------------------------------------
   output$home_chart_proy_sector <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("sector", "sub_sector", "uno") |> hc_ddd(name = "Sector") |>
+    data_filtrada |>
+      get_ddd("sector", "sub_sector", "uno") |>
+      hc_ddd(name = "Sector") |>
       hc_subtitle(text = "Sector/Subsector")
 
   })
@@ -140,7 +142,7 @@ function(input, output, session) {
 
       m <- m |>
         addControl(
-          "No hay proyectos seleccionados con información geográfica.",
+          "No hay iniciativas seleccionadas con información geográfica.",
           position = "topright", className = "info legend"
           )
 
@@ -191,7 +193,7 @@ function(input, output, session) {
       m <- m |>
         addControl(
           str_glue(
-            "Se muestran {fmt_coma(na_count)} de los {fmt_coma(nrow(data_filtrada))} proyectos seleccionados."
+            "Se muestran {fmt_coma(na_count)} de las {fmt_coma(nrow(data_filtrada))} iniciativas seleccionadas."
           ),
           position = "bottomright",
           className = "info legend"
@@ -225,6 +227,7 @@ function(input, output, session) {
         selection = "single",
         rownames = FALSE,
         options = list(
+          # scrollY = "90vh",
           language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
         )
       ) |>
@@ -327,9 +330,43 @@ function(input, output, session) {
   }) |>
     bindEvent(bip_selecionado())
 
+  # reporte -----------------------------------------------------------------
+  nombre_reporte <- reactive({
+    iniciativas <- data_filtrada() |> nrow()
+    str_glue("reporte_fndr_{iniciativas}_iniciativas")
+  })
+
+  # https://shiny.rstudio.com/articles/generating-reports.html
+  output$generar_reporte <- downloadHandler(
+    # filename = "report.pdf",
+    filename = function(){
+      fs::path(nombre_reporte(), ext = "pdf")
+    },
+    content = function(file) {
+
+      tempReport <- file.path(tempdir(), "reporte.Rmd")
+
+      file.copy("reporte/reporte.Rmd", tempReport, overwrite = TRUE)
+
+      codbips <- data_filtrada() |>
+        pull(codigo)
+
+      params <- list(
+        bips = codbips,
+        time = Sys.time()
+        )
+
+      rmarkdown::render(
+        tempReport,
+        output_file = file,
+        params = params,
+        envir = new.env(parent = globalenv())
+      )
+
+    }
+  )
+
   # fin server --------------------------------------------------------------
   # updateActionButton(session = session, "aplicar_filtros", label = "test")
-
-
 
 }
