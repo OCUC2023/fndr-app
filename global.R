@@ -9,6 +9,10 @@ library(leaflet)
 library(histoslider)
 library(highcharter)
 
+# reporte
+library(showtext)
+library(ggfittext)
+
 # data --------------------------------------------------------------------
 # este proceso debiera esta aparte, la data
 # debería venir ya procesada.
@@ -41,7 +45,8 @@ fndr_pars <- list(
   secondary = "#FE6565",
   info      = "#F0F0F0",
   font      = "Roboto",
-  font_head = "Roboto Slab"
+  font_head = "Roboto Slab",
+  font_sys  = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
 )
 
 fndr_theme <- bs_theme(
@@ -54,12 +59,52 @@ fndr_theme <- bs_theme(
 ) |>
   bs_add_rules(sass::sass_file("www/custom.scss"))
 
-options(
-  highcharter.theme = hc_theme_smpl(
-    colors = c(fndr_pars$primary, fndr_pars$secondary, hc_theme_smpl()$colors[c(3:6)]),
-    yAxis = list(endOnTick = FALSE)
+hcopts <- getOption("highcharter.chart")
+hcopts$exporting <- list(
+  enabled = TRUE,
+  buttons = list(
+    contextButton = list(
+      symbolStrokeWidth = 1,
+      symbolFill =  '#C0C0C0',
+      symbolStroke = '#C0C0C0'
+      )
     )
   )
+
+newlang_opts <- getOption("highcharter.lang")
+newlang_opts$weekdays <- c("domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado")
+newlang_opts$months <- c("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+                         "agosto", "septiembre", "octubre", "noviembre", "diciembre")
+newlang_opts$shortMonths <- c("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep",
+                              "oct", "nov", "dic")
+newlang_opts$drillUpText  <- "◁ Volver a {series.name}"
+newlang_opts$loading      <- "Cargando información"
+newlang_opts$downloadCSV  <- "Descargar CSV"
+newlang_opts$downloadJPEG <- "Descargar JPEG"
+newlang_opts$downloadPDF  <- "Descargar PDF"
+newlang_opts$downloadPNG  <- "Descargar PNG"
+newlang_opts$downloadSVG  <- "Descargar SVG"
+newlang_opts$downloadXLS  <- "Descargar XLS"
+newlang_opts$printChart   <- "Imprimir gráfico"
+newlang_opts$viewFullscreen <- "Ver pantalla completa"
+newlang_opts$resetZoom    <- "Resetear zoom"
+newlang_opts$thousandsSep <- "."
+newlang_opts$decimalPoint <- ","
+
+options(
+  highcharter.lang = newlang_opts,
+  highcharter.theme = hc_theme(
+    colors = c(fndr_pars$primary, fndr_pars$secondary, hc_theme_smpl()$colors[c(3:6)]),
+    # colors = "#0C0C0C",
+    chart = list(style = list(fontFamily = fndr_pars$font_sys)),
+    title = list(style = list(fontFamily = fndr_pars$font_sys)),
+    subtitle = list(style = list(fontFamily = fndr_pars$font_sys)),
+    yAxis = list(endOnTick = FALSE)
+    ),
+  highcharter.chart = hcopts
+  )
+
+# highcharts_demo()
 
 # funciones custom --------------------------------------------------------
 # custom nav_panel para agregar clase `ttl` al titulo
@@ -107,6 +152,7 @@ hc_ddd <- function(ddd, name = "", ...){
       id = v1,
       type = "column",
       name = v1,
+      color = fndr_pars$secondary,
       data = map(data, mutate, name = v2, y = value),
       data = map(data, list_parse)
     )
@@ -115,6 +161,7 @@ hc_ddd <- function(ddd, name = "", ...){
     ddd1,
     type = "column",
     name = name,
+    color = fndr_pars$primary,
     hcaes(x = v1, y = value, drilldown = v1)
   ) |>
     hc_drilldown(
@@ -201,7 +248,7 @@ sidebar_content <- tagList(
       )
     ),
     accordion_panel(
-      "Año Ingreso & Estado",
+      "Año Ingreso & Periodo",
       icon = icon("clock"),
       sliderInput(
         "anios",
@@ -211,6 +258,12 @@ sidebar_content <- tagList(
         value = c(min(data$ano_de_ingreso), max(data$ano_de_ingreso)),
         sep = "",
         ticks = FALSE
+      ),
+      selectInput(
+        "d",
+        "Periodo administrativo",
+        choices = c("Orrego", "Nombre 2", "Nombre 3"),
+        multiple = TRUE
       )
     ),
     accordion_panel(
@@ -239,6 +292,13 @@ sidebar_content <- tagList(
   ),
 
   tags$br(),
+
+  downloadButton(
+    "generar_reporte",
+    tags$small("Generar reporte"),
+    class = "btn-sm btn-secondary",
+    icon = icon("download")
+  ),
 
   # actionButton(
   #   "aplicar_filtros",
