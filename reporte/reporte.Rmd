@@ -7,6 +7,7 @@ output:
 params:
   bips: NA
   time: NA
+  path: NA
 editor_options: 
   chunk_output_type: console
 ---
@@ -28,7 +29,9 @@ theme_set(
 
 message(here::here("data/data.rds"))
 
-data <- readRDS(here::here("data/data.rds"))
+# data <- readRDS(here::here("data/data.rds"))
+# data <- readRDS(url("https://github.com/OCUC2023/fndr-app/raw/main/data/data.rds"))
+data <- readRDS(params$path)
 data <- data |> filter(codigo %in% params$bips)
 
 fndr_pars <- list(

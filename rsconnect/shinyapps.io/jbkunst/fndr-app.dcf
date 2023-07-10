@@ -5,10 +5,10 @@ account: jbkunst
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 9243086
-bundleId: 7377381
+bundleId: 7378183
 url: https://jbkunst.shinyapps.io/fndr-app/
-when: 1687468815.9131
-lastSyncTime: 1687468815.91312
+when: 1687491930.65899
+lastSyncTime: 1687491930.659
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: R/01-geojson-test.R

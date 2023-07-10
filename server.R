@@ -4,26 +4,25 @@
 function(input, output, session) {
 
   # data --------------------------------------------------------------------
-  # data prefiltrada para conteo
-  data_pre_filtrada <- reactive({
-    cli::cli_h2("reactive data_pre_filtrada")
+  data_filtrada <- reactive({
+    cli::cli_h2("reactive data_filtrada")
 
-    data_pre_filtrada <- data |>
-      filter(sector     %in% if(is.null(input$sector    )) unique(data$sector)     else input$sector     ) |>
-      filter(sub_sector %in% if(is.null(input$sub_sector)) unique(data$sub_sector) else input$sub_sector ) |>
+    data_filtrada <- data |>
+      # filter(sector     %in% if(is.null(input$sector    )) unique(data$sector)     else input$sector     ) |>
+      # filter(sub_sector %in% if(is.null(input$sub_sector)) unique(data$sub_sector) else input$sub_sector ) |>
 
-      filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
-      filter(area_dentro_del_eje %in% if(is.null(input$area_dentro_del_eje)) unique(data$area_dentro_del_eje) else input$area_dentro_del_eje) |>
+      # filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
+      # filter(area_dentro_del_eje %in% if(is.null(input$area_dentro_del_eje)) unique(data$area_dentro_del_eje) else input$area_dentro_del_eje) |>
 
-      filter(provincia_s %in% if(is.null(input$provincia_s)) unique(data$provincia_s)     else input$provincia_s) |>
-      filter(comuna_s %in% if(is.null(input$comuna_s)) unique(data$comuna_s) else input$comuna_s) |>
+      # filter(provincia_s %in% if(is.null(input$provincia_s)) unique(data$provincia_s)     else input$provincia_s) |>
+      # filter(comuna_s %in% if(is.null(input$comuna_s)) unique(data$comuna_s) else input$comuna_s) |>
 
-      filter(between(ano_de_ingreso, input$anios[1], input$anios[2])) |>
+      filter(ano_de_ingreso %in% if(is.null(input$anios)) unique(data$ano_de_ingreso) else input$anios) |>
       filter(TRUE)
 
-    cli::cli_inform("{fmt_coma(nrow(data_pre_filtrada))} filas")
+    cli::cli_inform("{fmt_coma(nrow(data_filtrada))} filas")
 
-    data_pre_filtrada
+    data_filtrada
 
   })
 
@@ -31,179 +30,47 @@ function(input, output, session) {
   observe({
     cli::cli_h2("observe reset_filtros")
 
-    updateSelectInput(session, "sector", selected = NA)
-    updateSelectInput(session, "sub_sector", selected = NA)
+    # updateSelectInput(session, "sector", selected = NA)
+    # updateSelectInput(session, "sub_sector", selected = NA)
+    #
+    # updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
+    # updateSelectInput(session, "area_dentro_eje", selected = NA)
+    #
+    # updateSelectInput(session, "provincia_s", selected = NA)
+    # updateSelectInput(session, "comuna_s", selected = NA)
 
-    updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
-    updateSelectInput(session, "area_dentro_eje", selected = NA)
-
-    updateSelectInput(session, "provincia_s", selected = NA)
-    updateSelectInput(session, "comuna_s", selected = NA)
-
-    updateSliderInput(session, "anios", value = c(min(data$ano_de_ingreso), max(data$ano_de_ingreso)))
+    updateSelectInput(session, "anios", selected = NA)
 
   }) |>
     bindEvent(input$reset_filtros)
 
-  data_filtrada <- reactive({
-    cli::cli_h2("reactive data_filtrada")
-    data_pre_filtrada <- data_pre_filtrada()
-    data_filtrada <- data_pre_filtrada
-    data_filtrada
-  })
-
   # textos ------------------------------------------------------------------
-  output$aplicar_filtros <- renderUI({
-    d <- data_pre_filtrada()
-    nr <- nrow(d)
-    tagList(
-      icon("filter"),
-      str_glue("{fmt_coma(nr)} iniciativas seleccionadas.")
-      )
-  })
-
-  output$home_proyectos_value <- renderText(fmt_coma(nrow(data_filtrada())))
-
-  output$home_etapa_chart <- renderHighchart({
-    # data_filtrada()
-    # data |>
-    data_filtrada() |>
-      count(etapa, sort = TRUE) |>
-      mutate(etapa = fct_inorder(etapa)) |>
-      hchart("pie", name = "Etapa", hcaes(name = etapa, y = n)) |>
-      hc_tooltip(shared = TRUE) |>
-      hc_plotOptions(
-        pie = list(
-          borderWidth = 0,
-          allowPointSelect = FALSE,
-          cursor = 'pointer',
-          dataLabels = list(enabled = FALSE)
-        )
-      )|>
-      hc_add_theme(hc_theme_sparkline_vb())
-
-  })
-
-  # home charts -------------------------------------------------------------
-  output$home_chart_proy_sector <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |>
-      get_ddd("sector", "sub_sector", "uno") |>
-      hc_ddd(name = "Sector") |>
-      hc_subtitle(text = "Sector/Subsector")
-
-  })
-
-  output$home_chart_proy_eje <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |> hc_ddd(name = "Eje") |>
-    hc_subtitle(text = "Eje/Área")
-  })
-
-  output$home_chart_proy_prov <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("provincia_s", "comuna_s", "uno") |> hc_ddd(name = "Provincia") |>
-      hc_subtitle(text = "Provincia/Comuna")
-  })
-
-  output$home_chart_etapa_anio <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada$etapa
-    data_filtrada |>
-      get_ddd("ano_de_ingreso", "etapa", "uno") |>
-      mutate(
-        # v1 = as.character(v1),
-        v2 = fct_reorder(v2, value, sum, .desc = TRUE),
-        ) |>
-      hchart(
-        type = "column",
-        hcaes(x = v1, y = value, group = v2),
-        stacking = 'normal'
-      ) |>
-      hc_tooltip(table = TRUE, sort = TRUE) |>
-      hc_xAxis(title = list(text = "")) |>
-      hc_yAxis(title = list(text = "")) |>
-      hc_subtitle(text = "Años/Etapa")
-
-  })
+  # output$aplicar_filtros <- renderUI({
+  #   d <- data_pre_filtrada()
+  #   nr <- nrow(d)
+  #   tagList(
+  #     icon("filter"),
+  #     str_glue("{fmt_coma(nr)} iniciativas seleccionadas.")
+  #     )
+  # })
 
   # mapa main ---------------------------------------------------------------
   output$mapa_main <- renderLeaflet({
 
-    data_filtrada <- data_filtrada()
-
-    data_mapa <- data_filtrada |>
-      filter(!is.na(x), !is.na(y)) |>
-      select(codigo, nombre, ano_de_ingreso, monto_aprobado, x, y, provincia_s)
-
-    m <- leaflet(options = leafletOptions(attributionControl = FALSE, zoomControl = TRUE))
-
-    if(nrow(data_mapa) == 0) {
-
-      m <- m |>
-        addControl(
-          "No hay iniciativas seleccionadas con información geográfica.",
-          position = "topright", className = "info legend"
-          )
-
-      return(m)
-
-    }
-
-    bnds <- data_mapa |>
-      summarise(
-        min(x, na.rm = TRUE), max(x, na.rm = TRUE),
-        min(y, na.rm = TRUE), max(y, na.rm = TRUE)
-        ) |>
-      as.vector()
-
-    m <- m |>
-      addCircleMarkers(
-        data = data_mapa,
-        ~y,
-        ~x,
-        layerId = ~codigo,
-        radius = 5,
-        weight = 1,
-
-        color = fndr_pars$secondary,
-        opacity = 0.9,
-        fillColor = fndr_pars$primary,
-        fillOpacity = 0.7,
-
-        label = ~paste(codigo, str_trunc(nombre, 25), sep = ": "),
-        labelOptions = labelOptions(
-          # offset = c(-20, -20),
-          style = list(
-            "font-family" = fndr_pars$font,
-            "box-shadow" = "2px 2px rgba(0,0,0,0.15)",
-            "font-size" = "12px",
-            "padding" = "10px",
-            "border-color" = "rgba(0,0,0,0.15)"
-          )
-        )
-
-      ) |>
+    leaflet(options = leafletOptions(attributionControl = FALSE, zoomControl = TRUE)) |>
       addProviderTiles(providers$CartoDB.Positron)
 
-    na_count <- nrow(data_filtrada) - nrow(data_mapa)
-
-    if(na_count > 0){
-
-      m <- m |>
-        addControl(
-          str_glue(
-            "Se muestran {fmt_coma(na_count)} de las {fmt_coma(nrow(data_filtrada))} iniciativas seleccionadas."
-          ),
-          position = "bottomright",
-          className = "info legend"
-          )
-
-    }
-
-    m
-
   })
+
+  # value boxes -------------------------------------------------------------
+  output$hero_aceras <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Aceras"))
+  output$hero_pavcal <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Pavimentacion De Calzadas"))
+  output$hero_refptn <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Refugios Peatonales"))
+  output$hero_ciclov <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Ciclovias"))
+  output$hero_estuds <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Estudios"))
+  output$hero_lumina <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Luminarias"))
+  output$hero_alarms <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Alarmas"))
+  output$hero_bacheo <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Bacheo De Calzadas"))
 
   # tabla main --------------------------------------------------------------
   output$tabla_main <- renderDataTable({
@@ -226,8 +93,11 @@ function(input, output, session) {
       DT::datatable(
         selection = "single",
         rownames = FALSE,
+        fillContainer = TRUE,
         options = list(
-          # scrollY = "90vh",
+          bPaginate = FALSE,
+          searching = FALSE,
+          info = FALSE,
           language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
         )
       ) |>
@@ -331,6 +201,12 @@ function(input, output, session) {
     bindEvent(bip_selecionado())
 
   # reporte -----------------------------------------------------------------
+  # observer para mostrar notificaión
+  # A queue of notification IDs
+  ids <- character(0)
+  # A counter
+  n <- 0
+
   nombre_reporte <- reactive({
     iniciativas <- data_filtrada() |> nrow()
     str_glue("reporte_fndr_{iniciativas}_iniciativas")
@@ -344,6 +220,22 @@ function(input, output, session) {
     },
     content = function(file) {
 
+      ni <- data_filtrada() |>
+            nrow() |>
+            scales::comma()
+
+      id <- showNotification(
+        tags$small(
+          shiny::icon("spinner", class = "fa-spin"),
+          str_glue(" Generando reporte de {ni} iniciativas seleccionadas...")
+        ),
+        duration = NULL,
+        closeButton = FALSE,
+        type = "default"
+      )
+      ids <<- c(ids, id)
+      n <<- n + 1
+
       tempReport <- file.path(tempdir(), "reporte.Rmd")
 
       file.copy("reporte/reporte.Rmd", tempReport, overwrite = TRUE)
@@ -353,7 +245,8 @@ function(input, output, session) {
 
       params <- list(
         bips = codbips,
-        time = Sys.time()
+        time = Sys.time(),
+        path = here::here("data/data.rds")
         )
 
       rmarkdown::render(
@@ -362,6 +255,10 @@ function(input, output, session) {
         params = params,
         envir = new.env(parent = globalenv())
       )
+
+      if (length(ids) > 0)
+        removeNotification(ids[1])
+      ids <<- ids[-1]
 
     }
   )
