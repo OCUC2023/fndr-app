@@ -188,7 +188,7 @@ function(input, output, session) {
   output$home_chart_proy_sector_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("sector", "sub_sector", "costo_total") |>
+      get_ddd("sector", "sub_sector", "costo_total_millones") |>
       hc_ddd(name = "Sector") |>
       hc_subtitle(text = "Sector/Subsector")
 
@@ -196,20 +196,20 @@ function(input, output, session) {
 
   output$home_chart_proy_eje_m <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total") |> hc_ddd(name = "Eje") |>
+    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total_millones") |> hc_ddd(name = "Eje") |>
       hc_subtitle(text = "Eje/Área")
   })
 
   output$home_chart_proy_prov_m <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("provincia_s", "comuna_s", "costo_total") |> hc_ddd(name = "Provincia") |>
+    data_filtrada |> get_ddd("provincia_s", "comuna_s", "costo_total_millones") |> hc_ddd(name = "Provincia") |>
       hc_subtitle(text = "Provincia/Comuna")
   })
 
   output$home_chart_etapa_anio_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("ano_de_iniciativa", "fase_oficial", "costo_total") |>
+      get_ddd("ano_de_iniciativa", "fase_oficial", "costo_total_millones") |>
       mutate(
         # v1 = as.character(v1),
         v2 = fct_reorder(v2, value, sum, .desc = TRUE),
@@ -240,8 +240,9 @@ function(input, output, session) {
         ano_de_iniciativa,
         eje_programa_de_gobierno,
         area_dentro_del_eje,
-        costo_total,
+        costo_total_millones,
         ) |>
+      mutate(costo_total_millones  = fmt_coma(costo_total_millones)) |>
       rename_all(~ str_to_title(str_replace_all(.x, "_", " ")))
 
     d |>
