@@ -10,8 +10,8 @@ page_navbar(
   ),
   sidebar = sidebar(width = 300, sidebar_content),
   nav_panel(
-    title = "Resumen",
-    icon  = icon("chart-line"),
+    title = "Inicio",
+    icon  = icon("dashboard"),
     # layout_column_wrap(
       # width = 1/2,
     layout_columns(
@@ -34,7 +34,20 @@ page_navbar(
       )
     ),
   nav_panel(
-    title = "Listado iniciativas",
+   title = "Gráficos",
+   icon = icon("chart-pie"),
+   layout_column_wrap(
+     1/2,
+     fillable = TRUE,
+     fill = TRUE,
+     card(highchartOutput("home_chart_proy_sector")),
+     card(highchartOutput("home_chart_proy_eje")),
+     card(highchartOutput("home_chart_proy_prov")),
+     card(highchartOutput("home_chart_etapa_anio"))
+     )
+  ),
+  nav_panel(
+    title = "Iniciativas",
     icon  = icon("table"),
     DT::dataTableOutput("tabla_main")
   )
