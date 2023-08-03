@@ -8,16 +8,15 @@ function(input, output, session) {
     cli::cli_h2("reactive data_filtrada")
 
     data_filtrada <- data |>
-      # filter(sector     %in% if(is.null(input$sector    )) unique(data$sector)     else input$sector     ) |>
-      # filter(sub_sector %in% if(is.null(input$sub_sector)) unique(data$sub_sector) else input$sub_sector ) |>
+      filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
+      filter(area_dentro_del_eje %in% if(is.null(input$area_dentro_del_eje)) unique(data$area_dentro_del_eje) else input$area_dentro_del_eje) |>
 
-      # filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
-      # filter(area_dentro_del_eje %in% if(is.null(input$area_dentro_del_eje)) unique(data$area_dentro_del_eje) else input$area_dentro_del_eje) |>
+      filter(provincia_s %in% if(is.null(input$provincia_s)) unique(data$provincia_s)     else input$provincia_s) |>
+      filter(comuna_s %in% if(is.null(input$comuna_s)) unique(data$comuna_s) else input$comuna_s) |>
 
-      # filter(provincia_s %in% if(is.null(input$provincia_s)) unique(data$provincia_s)     else input$provincia_s) |>
-      # filter(comuna_s %in% if(is.null(input$comuna_s)) unique(data$comuna_s) else input$comuna_s) |>
-
-      filter(ano_de_ingreso %in% if(is.null(input$anios)) unique(data$ano_de_ingreso) else input$anios) |>
+      filter(fase_oficial      %in% if(is.null(input$fase))   unique(data$fase_oficial)      else input$fase)   |>
+      filter(codigo            %in% if(is.null(input$codigo)) unique(data$codigo)            else input$codigo) |>
+      filter(ano_de_iniciativa %in% if(is.null(input$anios))  unique(data$ano_de_iniciativa) else input$anios)  |>
       filter(TRUE)
 
     cli::cli_inform("{fmt_coma(nrow(data_filtrada))} filas")
@@ -30,29 +29,28 @@ function(input, output, session) {
   observe({
     cli::cli_h2("observe reset_filtros")
 
-    # updateSelectInput(session, "sector", selected = NA)
-    # updateSelectInput(session, "sub_sector", selected = NA)
-    #
-    # updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
-    # updateSelectInput(session, "area_dentro_eje", selected = NA)
-    #
-    # updateSelectInput(session, "provincia_s", selected = NA)
-    # updateSelectInput(session, "comuna_s", selected = NA)
+    updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
+    updateSelectInput(session, "area_dentro_eje", selected = NA)
 
-    updateSelectInput(session, "anios", selected = NA)
+    updateSelectInput(session, "provincia_s", selected = NA)
+    updateSelectInput(session, "comuna_s", selected = NA)
+
+    updateSelectInput(session, "fase"  , selected = NA)
+    updateSelectInput(session, "codigo", selected = NA)
+    updateSelectInput(session, "anios" , selected = NA)
 
   }) |>
     bindEvent(input$reset_filtros)
 
   # textos ------------------------------------------------------------------
-  # output$aplicar_filtros <- renderUI({
-  #   d <- data_pre_filtrada()
-  #   nr <- nrow(d)
-  #   tagList(
-  #     icon("filter"),
-  #     str_glue("{fmt_coma(nr)} iniciativas seleccionadas.")
-  #     )
-  # })
+  output$iniciativas_seleccionadas <- renderUI({
+    d <- data_filtrada()
+    nr <- nrow(d)
+    tagList(
+      icon("filter"),
+      str_glue("{fmt_coma(nr)} iniciativas seleccionadas.")
+      )
+  })
 
   # mapa main ---------------------------------------------------------------
   output$mapa_main <- renderLeaflet({
@@ -82,10 +80,10 @@ function(input, output, session) {
       select(
         codigo,
         nombre,
-        ano_de_ingreso,
-        sector, sub_sector,
-        eje_programa_de_gobierno, area_dentro_del_eje,
-        monto_aprobado,
+        ano_de_iniciativa,
+        eje_programa_de_gobierno,
+        area_dentro_del_eje,
+        costo_total,
         ) |>
       rename_all(~ str_to_title(str_replace_all(.x, "_", " ")))
 
@@ -105,6 +103,7 @@ function(input, output, session) {
   })
 
   # modal -------------------------------------------------------------------
+  # bindevent en tabla o en mapa
   bip_selecionado <- reactiveVal(value = NULL, label = NULL)
 
   # se asigna si se hace click en el mapa
@@ -264,6 +263,5 @@ function(input, output, session) {
   )
 
   # fin server --------------------------------------------------------------
-  # updateActionButton(session = session, "aplicar_filtros", label = "test")
 
 }
