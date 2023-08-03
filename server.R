@@ -1,10 +1,11 @@
 # source("global.R")
 # input <- list(sector = "Multisectorial", anios = c(2018, 2023))
-
+# data_filtrada <- data
 function(input, output, session) {
 
   # data --------------------------------------------------------------------
-  data_filtrada <- reactive({
+  # data pre debounce
+  data_filtrada_pre <- reactive({
     cli::cli_h2("reactive data_filtrada")
 
     data_filtrada <- data |>
@@ -24,6 +25,8 @@ function(input, output, session) {
     data_filtrada
 
   })
+
+  data_filtrada <- debounce(data_filtrada_pre, 2000)
 
   # reseta/update filtros
   observe({
@@ -55,8 +58,76 @@ function(input, output, session) {
   # mapa main ---------------------------------------------------------------
   output$mapa_main <- renderLeaflet({
 
-    leaflet(options = leafletOptions(attributionControl = FALSE, zoomControl = TRUE)) |>
-      addProviderTiles(providers$CartoDB.Positron)
+    data_filtrada <- data_filtrada()
+
+    # dpuntos |> filter(codigo %in% pull(data_filtrada, codigo))
+
+    data_mapa <- inner_join(dpuntos, data_filtrada, by = join_by(codigo), relationship = "many-to-many")
+
+    data_mapa <- data_mapa |>
+      group_by(codigo) |>
+      mutate(codigo2 = str_c(codigo, row_number(), sep = "|"), .before = 1) |>
+      ungroup()
+
+    glimpse(data_mapa)
+
+    m <- leaflet(options = leafletOptions(attributionControl = FALSE, zoomControl = TRUE))
+
+    if(nrow(data_mapa) == 0) {
+
+      m <- m |>
+        addControl(
+          "No hay iniciativas seleccionadas con información geográfica.",
+          position = "topright", className = "info legend"
+        )
+
+      return(m)
+
+    }
+
+    bnds <- data_mapa |>
+      summarise(
+        min(x, na.rm = TRUE), max(x, na.rm = TRUE),
+        min(y, na.rm = TRUE), max(y, na.rm = TRUE)
+      ) |>
+      as.vector()
+
+    m <- leaflet(options = leafletOptions(attributionControl = FALSE, zoomControl = TRUE)) |>
+      addProviderTiles(providers$CartoDB.Positron) |>
+      addCircleMarkers(
+        data = data_mapa,
+        ~x,
+        ~y,
+        layerId = ~codigo2,
+        radius = 5,
+        weight = 1,
+
+        color = fndr_pars$secondary,
+        opacity = 0.9,
+        fillColor = fndr_pars$primary,
+        fillOpacity = 0.7,
+
+        label = ~paste(codigo, str_trunc(nombre, 25), sep = ": "),
+        labelOptions = labelOptions(
+          # offset = c(-20, -20),
+          style = list(
+            "font-family" = fndr_pars$font,
+            "box-shadow" = "2px 2px rgba(0,0,0,0.15)",
+            "font-size" = "12px",
+            "padding" = "10px",
+            "border-color" = "rgba(0,0,0,0.15)"
+          )
+        )
+      ) |>
+      addControl(
+        str_glue(
+          "Se muestran {fmt_coma(nrow(data_mapa))} ubicaciones de las {fmt_coma(nrow(data_filtrada))} iniciativas seleccionadas."
+        ),
+        position = "bottomright",
+        className = "info legend"
+      )
+
+    m
 
   })
 
@@ -69,6 +140,48 @@ function(input, output, session) {
   output$hero_lumina <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Luminarias"))
   output$hero_alarms <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Alarmas"))
   output$hero_bacheo <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Bacheo De Calzadas"))
+
+  # graficos ----------------------------------------------------------------
+  output$home_chart_proy_sector <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      get_ddd("sector", "sub_sector", "uno") |>
+      hc_ddd(name = "Sector") |>
+      hc_subtitle(text = "Sector/Subsector")
+
+  })
+
+  output$home_chart_proy_eje <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |> hc_ddd(name = "Eje") |>
+      hc_subtitle(text = "Eje/Área")
+  })
+
+  output$home_chart_proy_prov <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |> get_ddd("provincia_s", "comuna_s", "uno") |> hc_ddd(name = "Provincia") |>
+      hc_subtitle(text = "Provincia/Comuna")
+  })
+
+  output$home_chart_etapa_anio <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      get_ddd("ano_de_iniciativa", "fase_oficial", "uno") |>
+      mutate(
+        # v1 = as.character(v1),
+        v2 = fct_reorder(v2, value, sum, .desc = TRUE),
+      ) |>
+      hchart(
+        type = "column",
+        hcaes(x = v1, y = value, group = v2),
+        stacking = 'normal'
+      ) |>
+      hc_tooltip(table = TRUE, sort = TRUE) |>
+      hc_xAxis(title = list(text = "")) |>
+      hc_yAxis(title = list(text = "")) |>
+      hc_subtitle(text = "Años/Etapa")
+
+  })
 
   # tabla main --------------------------------------------------------------
   output$tabla_main <- renderDataTable({
@@ -108,27 +221,38 @@ function(input, output, session) {
 
   # se asigna si se hace click en el mapa
   observe({
-    bip_selecionado(input$mapa_main_marker_click$id)
+    cp <- input$mapa_main_marker_click$id
+    print(cp)
+    # cp <- "23423|3453"
+    cp <- str_remove(cp, "\\|.*")
+    print(cp)
+
+    cli::cli_alert_info("Mapa clickeado {cp}")
+    el <- list(cp, runif(1))
+    bip_selecionado(el)
   }) |>
     bindEvent(input$mapa_main_marker_click)
 
   # se asigna si se hace click en la tabla
   observe({
-
+    cli::cli_alert_info("Tabla clickeada {input$tabla_main_rows_selected}")
     data_filtrada <- data_filtrada()
 
-    data_filtrada |>
+    cb <- data_filtrada |>
       pull(codigo) |>
-      nth(input$tabla_main_rows_selected) |>
-      bip_selecionado()
+      nth(input$tabla_main_rows_selected)
+
+    el <- list(cb, runif(1))
+    bip_selecionado(el)
 
   }) |>
     bindEvent(input$tabla_main_rows_selected)
 
   observe({
 
-    bip_selecionado <- bip_selecionado()
-    # bip_selecionado <- 30094994
+    cli::cli_alert_info("Tabla/Mapa clickeado")
+    bip_selecionado <- bip_selecionado()[1]
+    # bip_selecionado <- 40046745
 
     if(is.null(bip_selecionado)) return(TRUE)
 
@@ -136,34 +260,38 @@ function(input, output, session) {
     bp <- data |>
       filter(codigo == bip_selecionado)
 
-    m <- bp |>
-      leaflet(
-        options = leafletOptions(
-          attributionControl = FALSE,
-          zoomControl = TRUE
-          )
-        ) |>
-      addCircleMarkers(
-        # data = data_mapa,
-        ~y,
-        ~x,
-        # layerId = ~codigo,
-        radius = 5,
-        weight = 1,
-        color = fndr_pars$secondary,
-        opacity = 0.9,
-        fillColor = fndr_pars$primary,
-        fillOpacity = 0.7,
-        # popup = ~as.character(nombre),
-        label = ~as.character(paste(codigo, provincia_s))
-      ) |>
-      addProviderTiles(providers$CartoDB.Positron)
+    # bp_mapa <- inner_join(dpuntos, bp, by = join_by(codigo))
+    #
+    # m <- bp_mapa |>
+    #   leaflet(
+    #     options = leafletOptions(
+    #       attributionControl = FALSE,
+    #       zoomControl = TRUE
+    #       )
+    #     ) |>
+    #   addCircleMarkers(
+    #     # data = data_mapa,
+    #     ~x,
+    #     ~y,
+    #     # layerId = ~codigo,
+    #     radius = 5,
+    #     weight = 1,
+    #     color = fndr_pars$secondary,
+    #     opacity = 0.9,
+    #     fillColor = fndr_pars$primary,
+    #     fillOpacity = 0.7,
+    #     # popup = ~as.character(nombre),
+    #     label = ~as.character(paste(codigo, provincia_s))
+    #   ) |>
+    #   addProviderTiles(providers$CartoDB.Positron)
 
     t <- bp |>
       select(
         codigo, nombre, sector, sub_sector,
-        eje_programa_de_gobierno, area_dentro_del_eje
+        eje_programa_de_gobierno, area_dentro_del_eje,
+        costo_total
         ) |>
+      mutate(costo_total = fmt_coma(costo_total)) |>
       mutate(across(everything(), as.character)) |>
       pivot_longer(cols = everything()) |>
       mutate(
@@ -183,13 +311,13 @@ function(input, output, session) {
     showModal(
       modalDialog(
         fluidRow(
-          column(12, t),
-          # column(3, leaflet() |> addTiles()),
+          column(12, t)
+          # column(3, m),
           # column(3, highcharts_demo()),
-          # column(3, datatable(head(iris)))
+          # column(3, ggplot(iris) + geom_point(aes(Sepal.Width, Sepal.Length)))
         ),
         title = str_c(bp$codigo, bp$nombre, sep = " - "),
-        size = "l",
+        size = "xl",
         footer= NULL,
         easyClose = TRUE,
         fade = TRUE
