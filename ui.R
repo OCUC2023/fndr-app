@@ -28,8 +28,8 @@ page_navbar(
         value_box(NULL, uiOutput("hero_refptn"), "Refugios Peatonales"),
         value_box(NULL, uiOutput("hero_ciclov"), "Ciclovias"),
         value_box(NULL, uiOutput("hero_lumina"), "Luminarias"),
-        value_box(NULL, uiOutput("hero_alarms"), "Alarmas"),
-        value_box(NULL, uiOutput("hero_bacheo"), "Bacheo De Calzadas"),
+        value_box(NULL, uiOutput("hero_alarms"), "Alarmas")
+        # value_box(NULL, uiOutput("hero_bacheo"), "Bacheo De Calzadas"),
         )
       )
     ),
@@ -37,11 +37,11 @@ page_navbar(
     title = "Listado iniciativas",
     icon  = icon("table"),
     DT::dataTableOutput("tabla_main")
-  ),
-  nav_panel(
-    title = "Acerca de",
-    icon  = icon("question-circle"),
-    "No tenemos mucha información..."
-    # DT::dataTableOutput("tabla_main")
   )
+  # nav_panel(
+  #   title = "Acerca de",
+  #   icon  = icon("question-circle"),
+  #   "No tenemos mucha información..."
+  #   # DT::dataTableOutput("tabla_main")
+  # )
 )
