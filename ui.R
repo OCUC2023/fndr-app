@@ -36,16 +36,38 @@ page_navbar(
   nav_panel(
    title = "Gráficos",
    icon = icon("chart-pie"),
-   layout_column_wrap(
-     1/2,
-     fillable = TRUE,
-     fill = TRUE,
-     card(highchartOutput("home_chart_proy_sector")),
-     card(highchartOutput("home_chart_proy_eje")),
-     card(highchartOutput("home_chart_proy_prov")),
-     card(highchartOutput("home_chart_etapa_anio"))
+
+   navset_card_tab(
+     title = NULL,
+     nav_panel(
+       title = "Cantidad Iniciativas",
+       layout_column_wrap(
+         1/2,
+         fillable = TRUE,
+         fill = TRUE,
+         card(highchartOutput("home_chart_proy_sector")),
+         card(highchartOutput("home_chart_proy_eje")),
+         card(highchartOutput("home_chart_proy_prov")),
+         card(highchartOutput("home_chart_etapa_anio"))
+         )
+       ),
+     nav_panel(
+       title = "Monto",
+       layout_column_wrap(
+         1/2,
+         fillable = TRUE,
+         fill = TRUE,
+         card(highchartOutput("home_chart_proy_sector_m")),
+         card(highchartOutput("home_chart_proy_eje_m")),
+         card(highchartOutput("home_chart_proy_prov_m")),
+         card(highchartOutput("home_chart_etapa_anio_m"))
+       )
+     ),
+     nav_panel(
+       title = "Otra sección",
      )
-  ),
+     )
+   ),
   nav_panel(
     title = "Iniciativas",
     icon  = icon("table"),
