@@ -52,7 +52,7 @@ page_navbar(
          )
        ),
      nav_panel(
-       title = "Monto",
+       title = "Monto (millones $)",
        layout_column_wrap(
          1/2,
          fillable = TRUE,
