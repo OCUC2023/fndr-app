@@ -51,13 +51,15 @@ data <- data |>
     magnitud,
     unidad,
     costo_total,
-    nombre
-  )
+    nombre,
+    sector,
+    sub_sector
+  ) |>
+  mutate(uno = 1)
 
 data$Shape              <- NULL
 attr(data, "sf_column") <- NULL
 attr(data, "agr")       <- NULL
-
 
 intercomunales <- st_read(dsn = "sagir.gdb",
                           layer = "Intercomunales",
@@ -70,6 +72,21 @@ intercomunales_aux <- intercomunales |>
   select(-n)
 
 data <- left_join(data, intercomunales_aux, by = join_by(codigo))
+
+dpuntos <- st_read(dsn = "sagir.gdb",
+        layer = "IniciativasFNDR_edit",
+        as_tibble = TRUE,
+        quiet = TRUE) |>
+  st_zm() |>
+  st_transform(4326) |>
+  st_cast("POINT") |>
+  janitor::clean_names() |>
+  select(codigo) |>
+  mutate(
+    x = st_coordinates(Shape)[,1],
+    y = st_coordinates(Shape)[,2]
+  ) |>
+  st_drop_geometry()
 
 # sidebar -----------------------------------------------------------------
 data |> count(eje_programa_de_gobierno)
@@ -97,7 +114,7 @@ sidebar_content <- tagList(
   # anio iniciativa
   selectizeInput(
     "anios",
-    tags$small(icon("clock"), "Año de ingreso"),
+    tags$small(icon("clock"), "Año de iniciativa"),
     choices = rev(sort(unique(data$ano_de_iniciativa))),
     multiple = TRUE,
     selected = NULL,
