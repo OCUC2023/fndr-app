@@ -183,6 +183,50 @@ function(input, output, session) {
 
   })
 
+
+  # monto -------------------------------------------------------------------
+  output$home_chart_proy_sector_m <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      get_ddd("sector", "sub_sector", "costo_total") |>
+      hc_ddd(name = "Sector") |>
+      hc_subtitle(text = "Sector/Subsector")
+
+  })
+
+  output$home_chart_proy_eje_m <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total") |> hc_ddd(name = "Eje") |>
+      hc_subtitle(text = "Eje/Área")
+  })
+
+  output$home_chart_proy_prov_m <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |> get_ddd("provincia_s", "comuna_s", "costo_total") |> hc_ddd(name = "Provincia") |>
+      hc_subtitle(text = "Provincia/Comuna")
+  })
+
+  output$home_chart_etapa_anio_m <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      get_ddd("ano_de_iniciativa", "fase_oficial", "costo_total") |>
+      mutate(
+        # v1 = as.character(v1),
+        v2 = fct_reorder(v2, value, sum, .desc = TRUE),
+      ) |>
+      hchart(
+        type = "column",
+        hcaes(x = v1, y = value, group = v2),
+        stacking = 'normal'
+      ) |>
+      hc_tooltip(table = TRUE, sort = TRUE) |>
+      hc_xAxis(title = list(text = "")) |>
+      hc_yAxis(title = list(text = "")) |>
+      hc_subtitle(text = "Años/Etapa")
+
+  })
+
+
   # tabla main --------------------------------------------------------------
   output$tabla_main <- renderDataTable({
 
