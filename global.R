@@ -55,7 +55,7 @@ data <- data |>
     sector,
     sub_sector
   ) |>
-  mutate(uno = 1)
+  mutate(uno = 1, costo_total_millones = round(costo_total/1e6))
 
 data$Shape              <- NULL
 attr(data, "sf_column") <- NULL
