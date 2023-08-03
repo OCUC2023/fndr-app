@@ -11,7 +11,7 @@ cli::cli_alert_info("funciones helpers")
 value_box <- partial(bslib::value_box, theme_color = "light")
 
 valor_tipologia_mag_uni <- function(data, eje){
-  data |>
+  daux <- data |>
     # as_data_frame() |>
     filter(tipologia_dentro_del_eje == eje) |>
     select(magnitud, unidad) |>
@@ -23,7 +23,13 @@ valor_tipologia_mag_uni <- function(data, eje){
     mutate(
       magnitud = fmt_coma(magnitud),
       unidad = ifelse(str_detect(unidad, "N°"), "", unidad)
-    ) |>
+    )
+
+  if(nrow(daux) == 0){
+    return(tags$h2("-"))
+  }
+
+  daux |>
     str_glue_data("{magnitud} {unidad}") |>
     str_trim() |>
     tags$h2()
