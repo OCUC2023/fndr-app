@@ -26,13 +26,13 @@ valor_tipologia_mag_uni <- function(data, eje){
     ) |>
     str_glue_data("{magnitud} {unidad}") |>
     str_trim() |>
-    tags$h4()
+    tags$h2()
 }
 
 value_box_tipologia <- function(data, eje){
   value_box(
     title = NULL,
-    value = tags$h3(valor_tipologia_mag_uni(data, eje)),
+    value = valor_tipologia_mag_uni(data, eje),
     eje
   )
 }
