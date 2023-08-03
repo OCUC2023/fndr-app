@@ -1,27 +1,68 @@
 # packages ----------------------------------------------------------------
-library(shiny)
-library(bslib)
-library(bsicons)
-library(tidyverse)
-library(scales)
-library(DT)
-library(leaflet)
-library(highcharter)
-library(sf)
+suppressWarnings({
+  suppressPackageStartupMessages({
+    library(shiny)
+    library(tidyverse)
+    library(bslib)
+    library(bsicons)
 
-# reporte
-library(showtext)
-library(ggfittext)
+    library(scales)
+    library(DT)
+    library(leaflet)
+    library(highcharter)
+    library(sf)
+    library(cli)
+
+    # reporte
+    library(showtext)
+    library(ggfittext)
+  })
+})
+
+source("R/parametros_opciones.R")
+source("R/funciones_helpers.R")
 
 # data --------------------------------------------------------------------
-data <- st_read(dsn = "sagir.gdb", layer = "IniciativasFNDR", as_tibble = TRUE)
+# mail: Código lectura gdb
+st_layers(dsn = "sagir.gdb")
+
+data <- st_read(dsn = "sagir.gdb",
+                layer = "IniciativasFNDR_edit",
+                as_tibble = TRUE,
+                quiet = TRUE)
 data <- data |>
   janitor::clean_names() |>
-  mutate(across(is.character, ~as.character(forcats::fct_na_value_to_level(.x, "vacío/no indicado")))) |>
-  mutate(across(is.character, str_to_title)) |>
-  mutate(across(is.character, ~stringi::stri_trans_general(.x,  id = "Latin-ASCII")))
+  mutate(ano_de_iniciativa = ifelse(ano_de_iniciativa == 0, "-", ano_de_iniciativa)) |>
+  mutate(across(where(is.character), ~as.character(forcats::fct_na_value_to_level(.x, "-")))) |>
+  mutate(across(where(is.character), str_to_title)) |>
+  mutate(across(where(is.character), ~stringi::stri_trans_general(.x,  id = "Latin-ASCII")))
 
-intercomunales <- st_read(dsn = "sagir.gdb", layer = "Intercomunales", as_tibble = TRUE)
+data <- data |>
+  select(
+    global_id,
+    codigo,
+    ano_de_iniciativa,
+    fase_oficial,
+    comuna_s,
+    provincia_s,
+    area_dentro_del_eje,
+    eje_programa_de_gobierno,
+    tipologia_dentro_del_eje,
+    magnitud,
+    unidad,
+    costo_total,
+    nombre
+  )
+
+data$Shape              <- NULL
+attr(data, "sf_column") <- NULL
+attr(data, "agr")       <- NULL
+
+
+intercomunales <- st_read(dsn = "sagir.gdb",
+                          layer = "Intercomunales",
+                          as_tibble = TRUE,
+                          quiet = TRUE)
 intercomunales <- janitor::clean_names(intercomunales)
 intercomunales_aux <- intercomunales |>
   count(codigo, sort = TRUE) |>
@@ -30,187 +71,68 @@ intercomunales_aux <- intercomunales |>
 
 data <- left_join(data, intercomunales_aux, by = join_by(codigo))
 
-# parámetros y opciones ---------------------------------------------------
-# https://framework.digital.gob.cl/typography.html
-# https://framework.digital.gob.cl/colors.html
-fndr_pars <- list(
-  primary   = "#006FB3",
-  secondary = "#FE6565",
-  info      = "#F0F0F0",
-  font      = "Roboto",
-  font_head = "Roboto Slab",
-  font_sys  = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
-)
-
-fndr_theme <- bs_theme(
-  base_font = font_google(fndr_pars$font),
-  heading_font = font_google(fndr_pars$font_head),
-  primary   = fndr_pars$primary,
-  secondary = fndr_pars$secondary,
-  info      = fndr_pars$info ,
-  "navbar-bg" = fndr_pars$primary
-) |>
-  bs_add_rules(sass::sass_file("www/custom.scss"))
-
-hcopts <- getOption("highcharter.chart")
-hcopts$exporting <- list(
-  enabled = TRUE,
-  buttons = list(
-    contextButton = list(
-      symbolStrokeWidth = 1,
-      symbolFill =  '#C0C0C0',
-      symbolStroke = '#C0C0C0'
-      )
-    )
-  )
-
-newlang_opts <- getOption("highcharter.lang")
-newlang_opts$weekdays <- c("domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado")
-newlang_opts$months <- c("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
-                         "agosto", "septiembre", "octubre", "noviembre", "diciembre")
-newlang_opts$shortMonths <- c("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep",
-                              "oct", "nov", "dic")
-newlang_opts$drillUpText  <- "◁ Volver a {series.name}"
-newlang_opts$loading      <- "Cargando información"
-newlang_opts$downloadCSV  <- "Descargar CSV"
-newlang_opts$downloadJPEG <- "Descargar JPEG"
-newlang_opts$downloadPDF  <- "Descargar PDF"
-newlang_opts$downloadPNG  <- "Descargar PNG"
-newlang_opts$downloadSVG  <- "Descargar SVG"
-newlang_opts$downloadXLS  <- "Descargar XLS"
-newlang_opts$printChart   <- "Imprimir gráfico"
-newlang_opts$viewFullscreen <- "Ver pantalla completa"
-newlang_opts$resetZoom    <- "Resetear zoom"
-newlang_opts$thousandsSep <- "."
-newlang_opts$decimalPoint <- ","
-
-options(
-  highcharter.lang = newlang_opts,
-  highcharter.theme = hc_theme(
-    colors = c(fndr_pars$primary, fndr_pars$secondary, hc_theme_smpl()$colors[c(3:6)]),
-    # colors = "#0C0C0C",
-    chart = list(style = list(fontFamily = fndr_pars$font_sys)),
-    title = list(style = list(fontFamily = fndr_pars$font_sys)),
-    subtitle = list(style = list(fontFamily = fndr_pars$font_sys)),
-    yAxis = list(endOnTick = FALSE)
-    ),
-  highcharter.chart = hcopts
-  )
-
-# highcharts_demo()
-
-# funciones custom --------------------------------------------------------
-# value_box_main <- function(value, description){
-#   value_box(
-#     title = NULL,
-#     value = value,
-#     description
-#   )
-# }
-
-value_box <- partial(bslib::value_box, theme_color = "light")
-
-valor_tipologia_mag_uni <- function(data, eje){
-  data |>
-    as_data_frame() |>
-    filter(tipologia_dentro_del_eje == eje) |>
-    select(magnitud, unidad) |>
-    summarise(
-      magnitud = round(sum(magnitud, na.rm = TRUE), 2),
-      unidad   = unique(unidad)
-    ) |>
-    # remover texto grande si es número
-    mutate(
-      magnitud = fmt_coma(magnitud),
-      unidad = ifelse(str_detect(unidad, "N°"), "", unidad)
-      ) |>
-    str_glue_data("{magnitud} {unidad}") |>
-    str_trim() |>
-    tags$h4()
-}
-
-value_box_tipologia <- function(data, eje){
-  value_box(
-    title = NULL,
-    value = tags$h3(valor_tipologia_mag_uni(data, eje)),
-    eje
-  )
-}
-
-# custom nav_panel para agregar clase `ttl` al titulo
-nav_panel <- function (title, ..., value = title, icon = NULL) {
-  bslib:::tabPanel_(
-    tags$span(title, class = "ttl"),
-    ...,
-    value = value,
-    icon = icon
-    )
-}
-
-card <- partial(bslib::card, full_screen = TRUE)
-
-fmt_coma <- purrr::partial(scales::comma, big.mark = ".", decimal.mark = ",")
-
-get_ddd <- function(data, var1 = "provincia_s", var2 = "comuna_s", var2sum = "uno"){
-  ddd <- data |>
-    group_by(v1 = .data[[var1]], v2 = .data[[var2]]) |>
-    summarise(
-      value = sum(.data[[var2sum]]),
-      .groups = "drop"
-    )
-  ddd
-}
-
-hc_ddd <- function(ddd, name = "", ...){
-
-  ddd1 <- ddd |>
-    group_by(v1) |>
-    summarise(value = sum(value)) |>
-    arrange(desc(value)) |>
-    mutate(v1 = fct_inorder(v1)) |>
-    ungroup()
-
-  ddd2 <- ddd |>
-    ungroup() |>
-    arrange(desc(value)) |>
-    group_nest(v1) |>
-    mutate(
-      id = v1,
-      type = "column",
-      name = v1,
-      color = fndr_pars$secondary,
-      data = map(data, mutate, name = v2, y = value),
-      data = map(data, list_parse)
-    )
-
-  hchart(
-    ddd1,
-    type = "column",
-    name = name,
-    color = fndr_pars$primary,
-    hcaes(x = v1, y = value, drilldown = v1)
-  ) |>
-    hc_drilldown(
-      allowPointDrilldown = TRUE,
-      series = list_parse(ddd2),
-      activeAxisLabelStyle = list(
-        textDecoration = 'none',
-        fontStyle = 'normal',
-        color = 'gray'
-      )
-    ) |>
-    hc_xAxis(title = list(text = "")) |>
-    hc_yAxis(title = list(text = ""))
-
-}
-
-# hc_ddd(ddd, name = "Provincia")
-
 # sidebar -----------------------------------------------------------------
 data |> count(eje_programa_de_gobierno)
 
 sidebar_content <- tagList(
-  # bip
+
+  selectizeInput(
+    "eje_programa_de_gobierno",
+    tags$small(icon("sitemap"), "Eje de Programa de Gobierno"),
+    choices = names(sort(table(data$eje_programa_de_gobierno), decreasing = TRUE)),
+    multiple = TRUE,
+    selected = NULL,
+    options = list(placeholder = "Todos")
+    ),
+  # conditionalPanel(
+  #   condition = "(typeof input.eje_programa_de_gobierno !== 'undefined' && input.eje_programa_de_gobierno.length > 0)",
+  #   selectInput(
+  #     "area_dentro_eje",
+  #     "Área dentro del Eje",
+  #     choices = NULL,
+  #     multiple = TRUE
+  #     )
+  #   ),
+
+  # anio iniciativa
+  selectizeInput(
+    "anios",
+    tags$small(icon("clock"), "Año de ingreso"),
+    choices = rev(sort(unique(data$ano_de_iniciativa))),
+    multiple = TRUE,
+    selected = NULL,
+    options = list(placeholder = "Todos")
+    ),
+
+  # fase
+  selectizeInput(
+    "fase",
+    tags$small(icon("forward"), "Fase"),
+    choices = rev(sort(unique(data$fase_oficial))),
+    multiple = TRUE,
+    selected = NULL,
+    options = list(placeholder = "Todos")
+  ),
+
+  selectizeInput(
+    "provincia_s",
+    tags$small(icon("location-dot"), "Provincia"),
+    choices = names(sort(table(data$provincia_s), decreasing = TRUE)),
+    multiple = TRUE,
+    selected = NULL,
+    options = list(placeholder = "Todos")
+    ),
+  # conditionalPanel(
+  #   condition = "(typeof input.provincia_s !== 'undefined' && input.provincia_s.length > 0)",
+  #   selectInput(
+  #     "comuna_s",
+  #     "Comuna",
+  #     choices = NULL,
+  #     multiple = TRUE
+  #     )
+  #   ),
+
+  # codigo bip
   selectizeInput(
     "codigo",
     tags$small(icon("barcode"), "Cógido BIP"),
@@ -220,15 +142,22 @@ sidebar_content <- tagList(
     options = list(placeholder = "Todos")
   ),
 
-  selectizeInput(
-    "anios",
-    tags$small( icon("clock"), "Año de ingreso"),
-    choices = rev(sort(unique(data$ano_de_ingreso))),
-    multiple = TRUE,
-    selected = NULL,
-    options = list(placeholder = "Todos")
+  tags$small(uiOutput("iniciativas_seleccionadas"), class = "text-muted"),
+  tags$br(),
+  actionButton(
+    "reset_filtros",
+    tags$small("Resetar filtros"),
+    class = "btn-sm btn-primary",
+    icon = icon("redo")
+    ),
+  tags$br(),
+  downloadButton(
+    "generar_reporte",
+    tags$small("Generar reporte"),
+    class = "btn-sm btn-secondary",
+    icon = icon("download")
+    )
   )
-)
 
 # sidebar_content <- tagList(
 #   accordion(
