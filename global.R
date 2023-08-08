@@ -93,24 +93,46 @@ data |> count(eje_programa_de_gobierno)
 
 sidebar_content <- tagList(
 
-  selectizeInput(
-    "eje_programa_de_gobierno",
-    tags$small(icon("sitemap"), "Eje de Programa de Gobierno"),
-    choices = names(sort(table(data$eje_programa_de_gobierno), decreasing = TRUE)),
-    multiple = TRUE,
-    selected = NULL,
-    options = list(placeholder = "Todos")
-    ),
-  # conditionalPanel(
-  #   condition = "(typeof input.eje_programa_de_gobierno !== 'undefined' && input.eje_programa_de_gobierno.length > 0)",
-  #   selectInput(
-  #     "area_dentro_eje",
-  #     "Área dentro del Eje",
-  #     choices = NULL,
-  #     multiple = TRUE
-  #     )
-  #   ),
+  accordion(
+    multiple = FALSE,
 
+    accordion_panel(
+      "Eje & Área Gobierno",
+      icon = icon("sitemap"),
+      selectizeInput(
+        "eje_programa_de_gobierno",
+        tags$small("Eje de Programa de Gobierno"),
+        choices = names(sort(table(data$eje_programa_de_gobierno), decreasing = TRUE)),
+        multiple = TRUE,
+        selected = NULL,
+        options = list(placeholder = "Todos")
+      ),
+      selectInput(
+        "area_dentro_del_eje",
+        tags$small("Área dentro del Eje"),
+        choices = names(sort(table(data$area_dentro_del_eje), decreasing = TRUE)),
+        multiple = TRUE
+        )
+      ),
+    accordion_panel(
+      "Provinca & Comuna",
+      icon = icon("location-dot"),
+      selectizeInput(
+        "provincia_s",
+        tags$small("Provincia"),
+        choices = names(sort(table(data$provincia_s), decreasing = TRUE)),
+        multiple = TRUE,
+        selected = NULL,
+        options = list(placeholder = "Todos")
+      ),
+      selectInput(
+        "comuna_s",
+        tags$small("Comuna"),
+        choices = names(sort(table(data$comuna_s), decreasing = TRUE)),
+        multiple = TRUE
+      )
+    )
+  ),
   # anio iniciativa
   selectizeInput(
     "anios",
@@ -119,8 +141,7 @@ sidebar_content <- tagList(
     multiple = TRUE,
     selected = NULL,
     options = list(placeholder = "Todos")
-    ),
-
+  ),
   # fase
   selectizeInput(
     "fase",
@@ -130,25 +151,6 @@ sidebar_content <- tagList(
     selected = NULL,
     options = list(placeholder = "Todos")
   ),
-
-  selectizeInput(
-    "provincia_s",
-    tags$small(icon("location-dot"), "Provincia"),
-    choices = names(sort(table(data$provincia_s), decreasing = TRUE)),
-    multiple = TRUE,
-    selected = NULL,
-    options = list(placeholder = "Todos")
-    ),
-  # conditionalPanel(
-  #   condition = "(typeof input.provincia_s !== 'undefined' && input.provincia_s.length > 0)",
-  #   selectInput(
-  #     "comuna_s",
-  #     "Comuna",
-  #     choices = NULL,
-  #     multiple = TRUE
-  #     )
-  #   ),
-
   # codigo bip
   selectizeInput(
     "codigo",
@@ -166,15 +168,17 @@ sidebar_content <- tagList(
     tags$small("Resetar filtros"),
     class = "btn-sm btn-primary",
     icon = icon("redo")
-    ),
+  ),
   tags$br(),
   downloadButton(
     "generar_reporte",
     tags$small("Generar reporte"),
     class = "btn-sm btn-secondary",
     icon = icon("download")
-    )
   )
+)
+
+
 
 # sidebar_content <- tagList(
 #   accordion(
