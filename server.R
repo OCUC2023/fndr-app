@@ -12,8 +12,8 @@ function(input, output, session) {
       filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
       filter(area_dentro_del_eje %in% if(is.null(input$area_dentro_del_eje)) unique(data$area_dentro_del_eje) else input$area_dentro_del_eje) |>
 
-      filter(provincia_s %in% if(is.null(input$provincia_s)) unique(data$provincia_s)     else input$provincia_s) |>
-      filter(comuna_s %in% if(is.null(input$comuna_s)) unique(data$comuna_s) else input$comuna_s) |>
+      filter(provincia_s %in% if(is.null(input$provincia_s)) unique(data$provincia_s) else input$provincia_s) |>
+      filter(comuna_s     %in% if(is.null(input$comuna_s))   unique(data$comuna_s)    else input$comuna_s)    |>
 
       filter(fase_oficial      %in% if(is.null(input$fase))   unique(data$fase_oficial)      else input$fase)   |>
       filter(codigo            %in% if(is.null(input$codigo)) unique(data$codigo)            else input$codigo) |>
@@ -69,8 +69,6 @@ function(input, output, session) {
       mutate(codigo2 = str_c(codigo, row_number(), sep = "|"), .before = 1) |>
       ungroup()
 
-    glimpse(data_mapa)
-
     m <- leaflet(options = leafletOptions(attributionControl = FALSE, zoomControl = TRUE))
 
     if(nrow(data_mapa) == 0) {
@@ -78,7 +76,7 @@ function(input, output, session) {
       m <- m |>
         addControl(
           "No hay iniciativas seleccionadas con información geográfica.",
-          position = "topright", className = "info legend"
+          position = "bottomright", className = "info legend"
         )
 
       return(m)
@@ -118,14 +116,15 @@ function(input, output, session) {
             "border-color" = "rgba(0,0,0,0.15)"
           )
         )
-      ) |>
-      addControl(
-        str_glue(
-          "Se muestran {fmt_coma(nrow(data_mapa))} ubicaciones de las {fmt_coma(nrow(data_filtrada))} iniciativas seleccionadas."
-        ),
-        position = "bottomright",
-        className = "info legend"
       )
+    # |>
+    #   addControl(
+    #     str_glue(
+    #       "Se muestran {fmt_coma(nrow(data_mapa))} ubicaciones de las {fmt_coma(nrow(data_filtrada))} iniciativas seleccionadas."
+    #     ),
+    #     position = "bottomright",
+    #     className = "info legend"
+    #   )
 
     m
 
@@ -242,7 +241,7 @@ function(input, output, session) {
         area_dentro_del_eje,
         costo_total_millones,
         ) |>
-      mutate(costo_total_millones  = fmt_coma(costo_total_millones)) |>
+      # mutate(costo_total_millones  = fmt_coma(costo_total_millones)) |>
       rename_all(~ str_to_title(str_replace_all(.x, "_", " ")))
 
     d |>
