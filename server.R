@@ -46,9 +46,10 @@ function(input, output, session) {
       filter(TRUE)
 
     if(input$nombre != ""){
-      cli::cli_inform("filtrando por nombre")
+      cli::cli_inform("filtrando por nombre: {input$nombre}")
+
       data_filtrada <- data_filtrada |>
-        filter(str_detect(nombre, str_to_lower(input$nombre)))
+        filter(str_detect(str_to_lower(nombre), str_to_lower(input$nombre)))
     }
 
     cli::cli_inform("{fmt_coma(nrow(data_filtrada))} filas")
