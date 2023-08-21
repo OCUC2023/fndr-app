@@ -28,6 +28,17 @@ hcopts$exporting <- list(
   enabled = TRUE,
   buttons = list(
     contextButton = list(
+      menuItems = list(
+        "printChart",
+        # "separator",
+        # "downloadPNG",
+        "downloadJPEG",
+        "downloadPDF",
+        # "downloadSVG",
+        # "separator",
+        # "downloadCSV",
+        "downloadXLS"
+      ),
       symbolStrokeWidth = 1,
       symbolFill =  '#C0C0C0',
       symbolStroke = '#C0C0C0'
@@ -48,12 +59,15 @@ newlang_opts$downloadJPEG <- "Descargar JPEG"
 newlang_opts$downloadPDF  <- "Descargar PDF"
 newlang_opts$downloadPNG  <- "Descargar PNG"
 newlang_opts$downloadSVG  <- "Descargar SVG"
-newlang_opts$downloadXLS  <- "Descargar XLS"
+newlang_opts$downloadXLS  <- "Descargar Excel"
 newlang_opts$printChart   <- "Imprimir gráfico"
 newlang_opts$viewFullscreen <- "Ver pantalla completa"
 newlang_opts$resetZoom    <- "Resetear zoom"
 newlang_opts$thousandsSep <- "."
 newlang_opts$decimalPoint <- ","
+
+newlang_opts$contextButtonTitle <- "Menú contextual del gráfico"
+newlang_opts$numericSymbols <- list("")
 
 options(
   highcharter.lang = newlang_opts,
@@ -63,7 +77,13 @@ options(
     chart = list(style = list(fontFamily = fndr_pars$font_sys)),
     title = list(style = list(fontFamily = fndr_pars$font_sys)),
     subtitle = list(style = list(fontFamily = fndr_pars$font_sys)),
-    yAxis = list(endOnTick = FALSE)
+    yAxis = list(endOnTick = FALSE),
+    plotOptions = list(
+      series = list(
+        dataLabels = list(style = list(fontWeight = "normal"))
+      )
+    )
   ),
   highcharter.chart = hcopts
 )
+
