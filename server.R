@@ -1,24 +1,55 @@
 # source("global.R")
-# input <- list(sector = "Multisectorial", anios = c(2018, 2023))
+input <- list(
+
+)
 # data_filtrada <- data
 function(input, output, session) {
 
   # data --------------------------------------------------------------------
   # data pre debounce
   data_filtrada_pre <- reactive({
+
     cli::cli_h2("reactive data_filtrada")
 
-    data_filtrada <- data |>
-      filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
-      filter(area_dentro_del_eje %in% if(is.null(input$area_dentro_del_eje)) unique(data$area_dentro_del_eje) else input$area_dentro_del_eje) |>
+    data_filtrada <- data
 
-      filter(provincia_s %in% if(is.null(input$provincia_s)) unique(data$provincia_s) else input$provincia_s) |>
-      filter(comuna_s     %in% if(is.null(input$comuna_s))   unique(data$comuna_s)    else input$comuna_s)    |>
+    cli::cli_inform("filtrando por años")
 
-      filter(fase_oficial      %in% if(is.null(input$fase))   unique(data$fase_oficial)      else input$fase)   |>
-      filter(codigo            %in% if(is.null(input$codigo)) unique(data$codigo)            else input$codigo) |>
-      filter(ano_de_iniciativa %in% if(is.null(input$anios))  unique(data$ano_de_iniciativa) else input$anios)  |>
+    # si todo está nulo, sin seleccionar, entonces mostramos todo! eoc filtramos
+    if(is.null(input$ano_resolucion) & is.null(input$ano_sesion) & is.null(input$ano_ingreso)){
+      xp <- rep(TRUE, nrow(data_filtrada))
+    } else {
+      # fechas con operador OR.
+      x1 <- if(is.null(input$ano_resolucion)) rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_resolucion %in% input$ano_resolucion
+      x2 <- if(is.null(input$ano_sesion))     rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_sesion     %in% input$ano_sesion
+      x3 <- if(is.null(input$ano_ingreso))    rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_ingreso    %in% input$ano_ingreso
+      xp <- x1 | x2 | x2
+    }
+
+    data_filtrada <- filter(data_filtrada, xp)
+
+    data_filtrada <- data_filtrada |>
+
+      # etapa y fase
+      filter(etapa     %in% if(is.null(input$etapa))     unique(data$etapa)     else input$etapa)     |>
+      filter(fase      %in% if(is.null(input$fase))      unique(data$fase)      else input$fase)      |>
+
+      # área
+      filter(alcance   %in% if(is.null(input$alcance))   unique(data$alcance)   else input$alcance)   |>
+      filter(area      %in% if(is.null(input$area))      unique(data$area)      else input$area)      |>
+      filter(provincia %in% if(is.null(input$provincia)) unique(data$provincia) else input$provincia) |>
+      filter(comuna    %in% if(is.null(input$comuna))    unique(data$comuna)    else input$comuna)    |>
+
+      # otros
+      filter(codigo    %in% if(is.null(input$codigo))    unique(data$codigo)    else input$codigo)    |>
+
       filter(TRUE)
+
+    if(input$nombre != ""){
+      cli::cli_inform("filtrando por nombre")
+      data_filtrada <- data_filtrada |>
+        filter(str_detect(nombre, str_to_lower(input$nombre)))
+    }
 
     cli::cli_inform("{fmt_coma(nrow(data_filtrada))} filas")
 
@@ -32,15 +63,23 @@ function(input, output, session) {
   observe({
     cli::cli_h2("observe reset_filtros")
 
-    updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
-    updateSelectInput(session, "area_dentro_eje", selected = NA)
+    # updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
+    # updateSelectInput(session, "area_dentro_eje", selected = NA)
 
-    updateSelectInput(session, "provincia_s", selected = NA)
-    updateSelectInput(session, "comuna_s", selected = NA)
+    updateSelectInput(session, "ano_resolucion", selected = NA)
+    updateSelectInput(session, "ano_sesion", selected = NA)
+    updateSelectInput(session, "ano_ingreso", selected = NA)
 
-    updateSelectInput(session, "fase"  , selected = NA)
+    updateSelectInput(session, "etapa", selected = NA)
+    updateSelectInput(session, "fase", selected = NA)
+
+    updateSelectInput(session, "alcance", selected = NA)
+    updateSelectInput(session, "area", selected = NA)
+    updateSelectInput(session, "provincia", selected = NA)
+    updateSelectInput(session, "comuna", selected = NA)
+
     updateSelectInput(session, "codigo", selected = NA)
-    updateSelectInput(session, "anios" , selected = NA)
+    updateTextInput(session, "nombre" , value = "")
 
   }) |>
     bindEvent(input$reset_filtros)
@@ -141,90 +180,97 @@ function(input, output, session) {
   output$hero_bacheo <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Bacheo De Calzadas"))
 
   # graficos ----------------------------------------------------------------
-  output$home_chart_proy_sector <- renderHighchart({
+  output$chart_proy_prov_comuna <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("sector", "sub_sector", "uno") |>
-      hc_ddd(name = "Sector") |>
-      hc_subtitle(text = "Sector/Subsector")
-
-  })
-
-  output$home_chart_proy_eje <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |> hc_ddd(name = "Eje") |>
-      hc_subtitle(text = "Eje/Área")
-  })
-
-  output$home_chart_proy_prov <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("provincia_s", "comuna_s", "uno") |> hc_ddd(name = "Provincia") |>
+      get_ddd("provincia", "comuna", "uno") |>
+      hc_ddd(name = "Provincia") |>
       hc_subtitle(text = "Provincia/Comuna")
   })
 
-  output$home_chart_etapa_anio <- renderHighchart({
+  output$chart_proy_eje_area <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("ano_de_iniciativa", "fase_oficial", "uno") |>
-      mutate(
-        # v1 = as.character(v1),
-        v2 = fct_reorder(v2, value, sum, .desc = TRUE),
-      ) |>
-      hchart(
-        type = "column",
-        hcaes(x = v1, y = value, group = v2),
-        stacking = 'normal'
-      ) |>
-      hc_tooltip(table = TRUE, sort = TRUE) |>
-      hc_xAxis(title = list(text = "")) |>
-      hc_yAxis(title = list(text = "")) |>
-      hc_subtitle(text = "Años/Etapa")
-
+      get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |>
+      hc_ddd(name = "Eje") |>
+      hc_subtitle(text = "Eje/Área")
   })
 
+  output$chart_tipologia <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      count(tipologia = fct_infreq(tipologia)) |>
+      hchart("pie", hcaes(tipologia, n), color = fndr_pars$secondary, name = "Tipología") |>
+      hc_subtitle(text = "Tipología")
+  })
+
+  output$chart_tipologia_dentro_eje <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      count(
+        tipologia_dentro_del_eje =
+          fct_infreq(fct_lump_n(tipologia_dentro_del_eje, Inf, other_level = "Otras Tipologías"))
+        ) |>
+      hchart("bar", hcaes(tipologia_dentro_del_eje, n), color = fndr_pars$secondary,
+             name = "Tipología dentro del eje") |>
+      hc_subtitle(text = "Tipología dentro del eje") |>
+      hc_xAxis(min = 0, max = 10, scrollbar = list(enabled = TRUE))
+  })
 
   # monto -------------------------------------------------------------------
-  output$home_chart_proy_sector_m <- renderHighchart({
+  output$chart_proy_prov_comuna_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("sector", "sub_sector", "costo_total_millones") |>
-      hc_ddd(name = "Sector") |>
-      hc_subtitle(text = "Sector/Subsector")
-
-  })
-
-  output$home_chart_proy_eje_m <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total_millones") |> hc_ddd(name = "Eje") |>
-      hc_subtitle(text = "Eje/Área")
-  })
-
-  output$home_chart_proy_prov_m <- renderHighchart({
-    data_filtrada <- data_filtrada()
-    data_filtrada |> get_ddd("provincia_s", "comuna_s", "costo_total_millones") |> hc_ddd(name = "Provincia") |>
+      get_ddd("provincia", "comuna", "costo_total_millones") |>
+      hc_ddd(name = "Provincia") |>
       hc_subtitle(text = "Provincia/Comuna")
   })
 
-  output$home_chart_etapa_anio_m <- renderHighchart({
+  output$chart_proy_eje_area_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("ano_de_iniciativa", "fase_oficial", "costo_total_millones") |>
-      mutate(
-        # v1 = as.character(v1),
-        v2 = fct_reorder(v2, value, sum, .desc = TRUE),
-      ) |>
-      hchart(
-        type = "column",
-        hcaes(x = v1, y = value, group = v2),
-        stacking = 'normal'
-      ) |>
-      hc_tooltip(table = TRUE, sort = TRUE) |>
-      hc_xAxis(title = list(text = "")) |>
-      hc_yAxis(title = list(text = "")) |>
-      hc_subtitle(text = "Años/Etapa")
-
+      get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total_millones") |>
+      hc_ddd(name = "Eje") |>
+      hc_subtitle(text = "Eje/Área")
   })
 
+  output$chart_tipologia_m <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      count(tipologia = fct_infreq(tipologia, costo_total_millones), wt = costo_total_millones) |>
+      hchart("pie", hcaes(tipologia, n), color = fndr_pars$secondary, name = "Tipología") |>
+      hc_subtitle(text = "Tipología")
+  })
+
+  output$chart_tipologia_dentro_eje_m <- renderHighchart({
+    data_filtrada <- data_filtrada()
+    data_filtrada |>
+      count(tipologia_dentro_del_eje = fct_infreq(tipologia_dentro_del_eje, costo_total_millones), wt = costo_total_millones) |>
+      hchart("bar", hcaes(tipologia_dentro_del_eje, n), color = fndr_pars$secondary,
+             name = "Tipología dentro del eje") |>
+      hc_subtitle(text = "Tipología dentro del eje") |>
+      hc_xAxis(min = 0, max = 10, scrollbar = list(enabled = TRUE))
+  })
+
+  # output$chart_etapa_anio_m <- renderHighchart({
+  #   data_filtrada <- data_filtrada()
+  #   data_filtrada |>
+  #     get_ddd("ano_de_iniciativa", "fase_oficial", "costo_total_millones") |>
+  #     mutate(
+  #       # v1 = as.character(v1),
+  #       v2 = fct_reorder(v2, value, sum, .desc = TRUE),
+  #     ) |>
+  #     hchart(
+  #       type = "column",
+  #       hcaes(x = v1, y = value, group = v2),
+  #       stacking = 'normal'
+  #     ) |>
+  #     hc_tooltip(table = TRUE, sort = TRUE) |>
+  #     hc_xAxis(title = list(text = "")) |>
+  #     hc_yAxis(title = list(text = "")) |>
+  #     hc_subtitle(text = "Años/Etapa")
+  #
+  # })
 
   # tabla main --------------------------------------------------------------
   output$tabla_main <- renderDataTable({
@@ -235,11 +281,35 @@ function(input, output, session) {
     d <- data_filtrada |>
       select(
         codigo,
+        ano_ingreso,
+        tipologia,
+        subtitulo,
+        convenios_glosas,
+        alcance,
+        area,
+        provincia,
+        comuna,
+        unidad_tecnica,
+        etapa,
         nombre,
-        ano_de_iniciativa,
+        costo_total,
+        fecha_admisibilidad,
+        fase,
+        rate,
+        fecha_ultima_revision,
+        fecha_sesion,
+        fecha_resolucion,
+        marco_presupuestario,
+        no_resolucion,
         eje_programa_de_gobierno,
-        area_dentro_del_eje,
-        costo_total_millones,
+        area,
+        tipologia_dentro_del_eje,
+        unidad,magnitud,
+        unidad_2,
+        magnitud_2,
+        unidad_3,
+        magnitud_3,
+        recintos
         ) |>
       # mutate(costo_total_millones  = fmt_coma(costo_total_millones)) |>
       rename_all(~ str_to_title(str_replace_all(.x, "_", " ")))
