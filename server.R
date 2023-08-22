@@ -12,7 +12,7 @@ function(input, output, session) {
     cli::cli_h2("reactive data_filtrada")
 
     data_filtrada <- data
-
+    # data_filtrada_export <- data
     cli::cli_inform("filtrando por años")
 
     # si todo está nulo, sin seleccionar, entonces mostramos todo! eoc filtramos
@@ -370,6 +370,7 @@ function(input, output, session) {
       rename_all(~ str_to_title(str_replace_all(.x, "_", " ")))
 
     data_filtrada_export |>
+      # select(`Costo Total`, everything()) |> head(10) |>
       DT::datatable(
         selection = "single",
         rownames = FALSE,
@@ -381,7 +382,8 @@ function(input, output, session) {
           language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
         )
       ) |>
-      DT::formatStyle(columns = names(data_filtrada_export), fontSize = "80%")
+      DT::formatStyle(columns = names(data_filtrada_export), fontSize = "80%") |>
+      DT::formatCurrency(columns = "Costo Total", currency = "", interval = 3, mark = ".", dec.mark = ",", digits = 0)
   })
 
   # modal -------------------------------------------------------------------

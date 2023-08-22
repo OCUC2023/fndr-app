@@ -47,11 +47,11 @@ hcopts$exporting <- list(
 )
 
 newlang_opts <- getOption("highcharter.lang")
-newlang_opts$weekdays <- c("domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado")
-newlang_opts$months <- c("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
-                         "agosto", "septiembre", "octubre", "noviembre", "diciembre")
-newlang_opts$shortMonths <- c("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep",
-                              "oct", "nov", "dic")
+newlang_opts$weekdays     <- c("domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado")
+newlang_opts$months       <- c("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+                               "agosto", "septiembre", "octubre", "noviembre", "diciembre")
+newlang_opts$shortMonths  <- c("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep",
+                               "oct", "nov", "dic")
 newlang_opts$drillUpText  <- "◁ Volver a {series.name}"
 newlang_opts$loading      <- "Cargando información"
 newlang_opts$downloadCSV  <- "Descargar CSV"
@@ -67,7 +67,7 @@ newlang_opts$thousandsSep <- "."
 newlang_opts$decimalPoint <- ","
 
 newlang_opts$contextButtonTitle <- "Menú contextual del gráfico"
-newlang_opts$numericSymbols <- list("")
+newlang_opts$numericSymbols <- JS("null")
 
 options(
   highcharter.lang = newlang_opts,
@@ -78,6 +78,7 @@ options(
     title = list(style = list(fontFamily = fndr_pars$font_sys)),
     subtitle = list(style = list(fontFamily = fndr_pars$font_sys)),
     yAxis = list(endOnTick = FALSE),
+    tooltip = list(valueDecimals = 0),
     plotOptions = list(
       series = list(
         dataLabels = list(style = list(fontWeight = "normal"))
