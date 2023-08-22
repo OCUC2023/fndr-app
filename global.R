@@ -233,7 +233,16 @@ sidebar_content <- tagList(
   downloadButton(
     "generar_reporte",
     tags$small("Generar reporte"),
-    class = "btn-sm btn-secondary",
-    icon = icon("download")
-  )
+    class = "btn-sm btn-primary",
+    icon = icon("file-pdf")
+  ),
+  tags$br(),
+  downloadButton(
+    "descargar_datos",
+    tags$small("Descargar iniciativas seleccionadas"),
+    class = "btn-sm btn-primary",
+    icon = icon("file-excel")
+    )
+
+
 )

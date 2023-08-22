@@ -60,6 +60,48 @@ function(input, output, session) {
 
   data_filtrada <- debounce(data_filtrada_pre, 2000)
 
+  data_filtrada_export <- reactive({
+    data_filtrada <- data_filtrada()
+    # data_filtrada_export <- data_filtrada
+
+    data_filtrada_export <- data_filtrada |>
+      select(
+        codigo,
+        ano_ingreso,
+        tipologia,
+        subtitulo,
+        convenios_glosas,
+        alcance,
+        area,
+        provincia,
+        comuna,
+        unidad_tecnica,
+        etapa,
+        nombre,
+        costo_total,
+        fecha_admisibilidad,
+        fase,
+        rate,
+        fecha_ultima_revision,
+        fecha_sesion,
+        fecha_resolucion,
+        marco_presupuestario,
+        no_resolucion,
+        eje_programa_de_gobierno,
+        area,
+        tipologia_dentro_del_eje,
+        unidad,magnitud,
+        unidad_2,
+        magnitud_2,
+        unidad_3,
+        magnitud_3,
+        recintos
+      )
+
+    data_filtrada_export
+
+  })
+
   # reseta/update filtros
   observe({
     cli::cli_h2("observe reset_filtros")
@@ -171,15 +213,47 @@ function(input, output, session) {
   })
 
   # value boxes -------------------------------------------------------------
-  output$hero_aceras <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Aceras"))
-  output$hero_pavcal <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Pavimentacion De Calzadas"))
-  output$hero_refptn <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Refugios Peatonales"))
-  output$hero_ciclov <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Ciclovias"))
-  output$hero_estuds <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Estudios"))
-  output$hero_lumina <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Luminarias"))
-  output$hero_alarms <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Alarmas"))
-  output$hero_bacheo <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Bacheo De Calzadas"))
+  output$hero_boxes <- renderUI({
+    data_filtrada <- data_filtrada()
+    # data_filtrada <- data
+    # data_filtrada |>
+    #   filter(str_detect(unidad, "tricos")) |>
+    #   View()
+    vbs <- data_filtrada |>
+      group_by(tipologia_dentro_del_eje, unidad) |>
+      summarise(
+        magnitud = round(sum(magnitud, na.rm = TRUE), 0),
+        n = n(),
+        .groups = "drop"
+        ) |>
+      arrange(desc(n)) |>
+      mutate(magnitud = fmt_coma(magnitud)) |>
+      pmap(function(tipologia_dentro_del_eje, unidad, magnitud, n){
 
+        value_box(
+          title = tags$small(tipologia_dentro_del_eje),
+          value = tags$span(tags$h1(magnitud), tags$h6(unidad))
+        )
+
+      })
+
+    layout_column_wrap(
+      width = 1/4,
+      fillable = TRUE,
+      fill = TRUE,
+      !!!vbs
+    )
+
+  })
+
+  # output$hero_aceras <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Aceras"))
+  # output$hero_pavcal <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Pavimentacion De Calzadas"))
+  # output$hero_refptn <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Refugios Peatonales"))
+  # output$hero_ciclov <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Ciclovias"))
+  # output$hero_estuds <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Estudios"))
+  # output$hero_lumina <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Luminarias"))
+  # output$hero_alarms <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Alarmas"))
+  # output$hero_bacheo <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Bacheo De Calzadas"))
   # graficos ----------------------------------------------------------------
   output$chart_proy_prov_comuna <- renderHighchart({
     data_filtrada <- data_filtrada()
@@ -207,15 +281,22 @@ function(input, output, session) {
 
   output$chart_tipologia_dentro_eje <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |>
+    daux <- data_filtrada |>
       count(
         tipologia_dentro_del_eje =
           fct_infreq(fct_lump_n(tipologia_dentro_del_eje, Inf, other_level = "Otras Tipologías"))
-        ) |>
-      hchart("bar", hcaes(tipologia_dentro_del_eje, n), color = fndr_pars$secondary,
-             name = "Tipología dentro del eje") |>
+        )
+    # daux <- head(daux, 6)
+    hc <- hchart(daux, "bar", hcaes(tipologia_dentro_del_eje, n),
+           color = fndr_pars$secondary, name = "Tipología dentro del eje") |>
       hc_subtitle(text = "Tipología dentro del eje") |>
-      hc_xAxis(min = 0, max = 10, scrollbar = list(enabled = TRUE))
+      hc_xAxis(title = list(text = "Tipología dentro del eje")) |>
+      hc_yAxis(title = list(text = "Cantidad iniciativas"))
+    if(nrow(daux) > 10){
+      hc <- hc |>
+        hc_xAxis(min = 0, max = 9, scrollbar = list(enabled = TRUE))
+    }
+    hc
   })
 
   # monto -------------------------------------------------------------------
@@ -245,12 +326,19 @@ function(input, output, session) {
 
   output$chart_tipologia_dentro_eje_m <- renderHighchart({
     data_filtrada <- data_filtrada()
-    data_filtrada |>
-      count(tipologia_dentro_del_eje = fct_infreq(tipologia_dentro_del_eje, costo_total_millones), wt = costo_total_millones) |>
-      hchart("bar", hcaes(tipologia_dentro_del_eje, n), color = fndr_pars$secondary,
-             name = "Tipología dentro del eje") |>
+    daux <- data_filtrada |>
+      count(tipologia_dentro_del_eje = fct_infreq(tipologia_dentro_del_eje, costo_total_millones), wt = costo_total_millones)
+
+    hc <- hchart(daux, "bar", hcaes(tipologia_dentro_del_eje, n),
+                 color = fndr_pars$secondary, name = "Tipología dentro del eje") |>
       hc_subtitle(text = "Tipología dentro del eje") |>
-      hc_xAxis(min = 0, max = 10, scrollbar = list(enabled = TRUE))
+      hc_xAxis(title = list(text = "Tipología dentro del eje")) |>
+      hc_yAxis(title = list(text = "Monto millones"))
+    if(nrow(daux) > 10){
+      hc <- hc |>
+        hc_xAxis(min = 0, max = 9, scrollbar = list(enabled = TRUE))
+    }
+    hc
   })
 
   # output$chart_etapa_anio_m <- renderHighchart({
@@ -276,46 +364,12 @@ function(input, output, session) {
   # tabla main --------------------------------------------------------------
   output$tabla_main <- renderDataTable({
 
-    # data$monto_aprobado
-    data_filtrada <- data_filtrada()
+    data_filtrada_export <- data_filtrada_export()
 
-    d <- data_filtrada |>
-      select(
-        codigo,
-        ano_ingreso,
-        tipologia,
-        subtitulo,
-        convenios_glosas,
-        alcance,
-        area,
-        provincia,
-        comuna,
-        unidad_tecnica,
-        etapa,
-        nombre,
-        costo_total,
-        fecha_admisibilidad,
-        fase,
-        rate,
-        fecha_ultima_revision,
-        fecha_sesion,
-        fecha_resolucion,
-        marco_presupuestario,
-        no_resolucion,
-        eje_programa_de_gobierno,
-        area,
-        tipologia_dentro_del_eje,
-        unidad,magnitud,
-        unidad_2,
-        magnitud_2,
-        unidad_3,
-        magnitud_3,
-        recintos
-        ) |>
-      # mutate(costo_total_millones  = fmt_coma(costo_total_millones)) |>
+    data_filtrada_export <- data_filtrada_export |>
       rename_all(~ str_to_title(str_replace_all(.x, "_", " ")))
 
-    d |>
+    data_filtrada_export |>
       DT::datatable(
         selection = "single",
         rownames = FALSE,
@@ -327,7 +381,7 @@ function(input, output, session) {
           language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
         )
       ) |>
-      DT::formatStyle(columns = names(d), fontSize = "80%")
+      DT::formatStyle(columns = names(data_filtrada_export), fontSize = "80%")
   })
 
   # modal -------------------------------------------------------------------
@@ -441,6 +495,20 @@ function(input, output, session) {
 
   }) |>
     bindEvent(bip_selecionado())
+
+
+
+  # download data -----------------------------------------------------------
+  output$descargar_datos<- downloadHandler(
+    filename = function() {
+      fs::path(str_glue("iniciativas_{nrow(data_filtrada_export())}"), ext = "xlsx")
+    },
+    content = function(file) {
+      tempdata    <- file.path(tempdir(), "datos.xlsx")
+      data_filtrada_export <- data_filtrada_export()
+      writexl::write_xlsx(data_filtrada_export(), file)
+    }
+  )
 
   # reporte -----------------------------------------------------------------
   # observer para mostrar notificaión
