@@ -18,7 +18,9 @@ fndr_theme <- bs_theme(
   primary   = fndr_pars$primary,
   secondary = fndr_pars$secondary,
   info      = fndr_pars$info ,
-  "navbar-bg" = fndr_pars$primary
+  "navbar-bg" = fndr_pars$primary,
+  "tooltip-color" = "black",
+  "tooltip-bg" = "#f7f7f7",
 ) |>
   bs_add_rules(sass::sass_file("www/custom.scss"))
 

@@ -33,8 +33,9 @@ data <- data |>
   # mutate(ano_de_iniciativa = ifelse(ano_de_iniciativa == 0, "-", ano_de_iniciativa)) |>
   mutate(across(where(is.character), ~as.character(forcats::fct_na_value_to_level(.x, "-")))) |>
   mutate(across(where(is.character), ~ifelse(.x == "", "-", .x))) |>
-  mutate(across(where(is.character), str_to_title)) |>
-  mutate(across(where(is.character), ~stringi::stri_trans_general(.x,  id = "Latin-ASCII")))
+  # mutate(across(where(is.character), str_to_title)) |>
+  # mutate(across(where(is.character), ~stringi::stri_trans_general(.x,  id = "Latin-ASCII"))) |>
+  filter(TRUE)
 
 # data |>
 #   glimpse()
@@ -96,6 +97,8 @@ dpuntos <- dpuntos |>
 # sidebar -----------------------------------------------------------------
 data |> count(eje_programa_de_gobierno)
 
+info_circle <- icon("info-circle", style= "opacity: 0.25;")
+
 sidebar_content <- tagList(
 
   accordion(
@@ -122,10 +125,16 @@ sidebar_content <- tagList(
     #   ),
     accordion_panel(
       "Periodo",
-      icon = icon("calendar-days"),
+      icon = tooltip(icon("calendar-days"), "Filtro de iniciativas según su año de aprobación o ingreso según corresponda."),
       selectizeInput(
         "ano_resolucion",
-        tags$small("Año Resolución"),
+        tags$small(
+          "Año Resolución",
+          tooltip(
+            info_circle,
+            "Año de la resolución que aprueba la iniciativa."
+            )
+          ),
         choices = rev(sort(unique(data$ano_resolucion))),
         multiple = TRUE,
         selected = NULL,
@@ -133,7 +142,13 @@ sidebar_content <- tagList(
       ),
       selectizeInput(
         "ano_sesion",
-        tags$small("Año Sesión"),
+        tags$small(
+          "Año Sesión",
+          tooltip(
+            info_circle,
+            "Año de la sesión CORE que aprobó la iniciativa."
+            )
+          ),
         choices = rev(sort(unique(data$ano_sesion))),
         multiple = TRUE,
         selected = NULL,
@@ -141,7 +156,13 @@ sidebar_content <- tagList(
       ),
       selectizeInput(
         "ano_ingreso",
-        tags$small("Año Ingreso"),
+        tags$small(
+          "Año Ingreso",
+          tooltip(
+            info_circle,
+            "Año en que la iniciativa fue ingresada, aplica a iniciativas que no tienen año de resolución o sesión en el sistema."
+            )
+          ),
         choices = rev(sort(unique(data$ano_ingreso))),
         multiple = TRUE,
         selected = NULL,
@@ -150,10 +171,13 @@ sidebar_content <- tagList(
     ),
     accordion_panel(
       "Etapa y Fase",
-      icon = icon("forward"),
+      icon = tooltip(icon("forward"), "filtro iniciativas según la etapa de postulación o la fase en que se encuentra."),
       selectizeInput(
         "etapa",
-        tags$small("Etapa"),
+        tags$small(
+          "Etapa",
+          tooltip(info_circle, "Etapa a la que postulo la iniciativa (diseño o ejecución).")
+          ),
         choices = rev(sort(unique(data$etapa))),
         multiple = TRUE,
         selected = NULL,
@@ -161,7 +185,10 @@ sidebar_content <- tagList(
       ),
       selectizeInput(
         "fase",
-        tags$small("Fase"),
+        tags$small(
+          "Fase",
+          tooltip(info_circle, "Si la iniciativa está aprobada o terminada.")
+          ),
         choices = rev(sort(unique(data$fase))),
         multiple = TRUE,
         selected = NULL,
@@ -170,10 +197,13 @@ sidebar_content <- tagList(
     ),
     accordion_panel(
       "Área",
-      icon = icon("location-dot"),
+      icon = tooltip(icon("location-dot"), "Filtrar iniciativas según su área geográfica."),
       selectizeInput(
         "alcance",
-        tags$small("Alcance"),
+        tags$small(
+          "Alcance",
+          tooltip(info_circle, "Comunal, intercomunal o regional según donde se ejecutará o afectará la iniciativa.")
+          ),
         choices = names(sort(table(data$alcance), decreasing = TRUE)),
         multiple = TRUE,
         selected = NULL,
@@ -181,7 +211,13 @@ sidebar_content <- tagList(
       ),
       selectizeInput(
         "area",
-        tags$small("Área"),
+        tags$small(
+          "Área",
+          tooltip(
+            info_circle,
+            "Rural o Urbana (el valor “-“ representa iniciativas intercomunales o regionales que no pueden ser definidas como urbanas o rurales)"
+            )
+          ),
         choices = names(sort(table(data$area), decreasing = TRUE)),
         multiple = TRUE,
         selected = NULL,
@@ -189,7 +225,10 @@ sidebar_content <- tagList(
       ),
       selectizeInput(
         "provincia",
-        tags$small("Provincia"),
+        tags$small(
+          "Provincia",
+          tooltip(info_circle, "Provincias de la región (el valor “-“ representa iniciativas intercomunales o regionales que no pueden ser definidas en una sola provincia).")
+          ),
         choices = names(sort(table(data$provincia), decreasing = TRUE)),
         multiple = TRUE,
         selected = NULL,
@@ -197,7 +236,13 @@ sidebar_content <- tagList(
       ),
       selectInput(
         "comuna",
-        tags$small("Comuna"),
+        tags$small(
+          "Comuna",
+          tooltip(
+            info_circle,
+            "Comunas de la región (el valor “-“ representa iniciativas intercomunales o regionales que no pueden ser definidas en una sola comuna)"
+            )
+          ),
         choices = names(sort(table(data$comuna), decreasing = TRUE)),
         multiple = TRUE
       )
@@ -208,7 +253,13 @@ sidebar_content <- tagList(
       # codigo bip
       selectizeInput(
         "codigo",
-        tags$small("Cógido BIP"),
+        tags$small(
+          "Cógido BIP",
+          tooltip(
+            info_circle,
+            "Filtrar por el código BIP de la iniciativa."
+            )
+          ),
         choices = sort(unique(data$codigo)),
         multiple = TRUE,
         selected = NULL,
@@ -216,7 +267,13 @@ sidebar_content <- tagList(
       ),
       textInput(
         "nombre",
-        tags$small("Nombre"),
+        tags$small(
+          "Palabra clave",
+          tooltip(
+            info_circle,
+            "Filtrar utilizando una palabra clave que se encuentre en el nombre de la iniciativa."
+            )
+          ),
         placeholder = "Buscar por nombre"
       )
     )
@@ -243,6 +300,5 @@ sidebar_content <- tagList(
     class = "btn-sm btn-primary",
     icon = icon("file-excel")
     )
-
-
+  # tags$head(tags$script(HTML("$(function () { $('[data-toggle=tooltip]').tooltip() })")))
 )

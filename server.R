@@ -67,29 +67,29 @@ function(input, output, session) {
     data_filtrada_export <- data_filtrada |>
       select(
         codigo,
-        ano_ingreso,
-        tipologia,
-        subtitulo,
+        `Año Ingreso` = ano_ingreso,
+        `Tipología` = tipologia,
+        `Subtítulo` = subtitulo,
         convenios_glosas,
         alcance,
-        area,
+        `Área` = area,
         provincia,
         comuna,
-        unidad_tecnica,
+        `Unidad Técnica` = unidad_tecnica,
         etapa,
         nombre,
         costo_total,
         fecha_admisibilidad,
         fase,
         rate,
-        fecha_ultima_revision,
-        fecha_sesion,
-        fecha_resolucion,
+        `Fehca Última Revisión` = fecha_ultima_revision,
+        `Fecha Sesión` = fecha_sesion,
+        `Fecha Resolución` = fecha_resolucion,
         marco_presupuestario,
-        no_resolucion,
+        `No Resolución` = no_resolucion,
         eje_programa_de_gobierno,
-        area,
-        tipologia_dentro_del_eje,
+        `Área` = area,
+        `Tipología dentro del eje` = tipologia_dentro_del_eje,
         unidad,magnitud,
         unidad_2,
         magnitud_2,
@@ -219,7 +219,7 @@ function(input, output, session) {
     # data_filtrada |>
     #   filter(str_detect(unidad, "tricos")) |>
     #   View()
-    vbs <- data_filtrada |>
+    dunimag1 <- data_filtrada |>
       group_by(tipologia_dentro_del_eje, unidad) |>
       summarise(
         magnitud = round(sum(magnitud, na.rm = TRUE), 0),
@@ -227,8 +227,22 @@ function(input, output, session) {
         .groups = "drop"
         ) |>
       arrange(desc(n)) |>
-      mutate(magnitud = fmt_coma(magnitud)) |>
-      pmap(function(tipologia_dentro_del_eje, unidad, magnitud, n){
+      mutate(magnitud = fmt_coma(magnitud))
+
+    dunimag2 <- data_filtrada |>
+      group_by(tipologia_dentro_del_eje, unidad = unidad_2) |>
+      summarise(
+        magnitud = round(sum(magnitud_2, na.rm = TRUE), 0),
+        n = n(),
+        .groups = "drop"
+      ) |>
+      arrange(desc(n)) |>
+      mutate(magnitud = fmt_coma(magnitud))
+
+    dunimag <- bind_rows(dunimag1, dunimag2)
+    # dunimag <- dunimag1
+
+    vbs <- pmap(dunimag, function(tipologia_dentro_del_eje, unidad, magnitud, n){
 
         value_box(
           title = tags$small(tipologia_dentro_del_eje),
@@ -260,7 +274,8 @@ function(input, output, session) {
     data_filtrada |>
       get_ddd("provincia", "comuna", "uno") |>
       hc_ddd(name = "Provincia") |>
-      hc_subtitle(text = "Provincia/Comuna")
+      hc_subtitle(text = "Provincia/Comuna") |>
+      hc_yAxis(title = list(text = "Iniciativas"))
   })
 
   output$chart_proy_eje_area <- renderHighchart({
@@ -268,14 +283,15 @@ function(input, output, session) {
     data_filtrada |>
       get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "uno") |>
       hc_ddd(name = "Eje") |>
-      hc_subtitle(text = "Eje/Área")
+      hc_subtitle(text = "Eje/Área") |>
+      hc_yAxis(title = list(text = "Iniciativas"))
   })
 
   output$chart_tipologia <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
       count(tipologia = fct_infreq(tipologia)) |>
-      hchart("pie", hcaes(tipologia, n), color = fndr_pars$secondary, name = "Tipología") |>
+      hchart("pie", hcaes(tipologia, n), color = fndr_pars$secondary, name = "Iniciativas") |>
       hc_subtitle(text = "Tipología")
   })
 
@@ -291,7 +307,7 @@ function(input, output, session) {
            color = fndr_pars$secondary, name = "Tipología dentro del eje") |>
       hc_subtitle(text = "Tipología dentro del eje") |>
       hc_xAxis(title = list(text = "Tipología dentro del eje")) |>
-      hc_yAxis(title = list(text = "Cantidad iniciativas"))
+      hc_yAxis(title = list(text = "Iniciativas"))
     if(nrow(daux) > 10){
       hc <- hc |>
         hc_xAxis(min = 0, max = 9, scrollbar = list(enabled = TRUE))
@@ -305,7 +321,8 @@ function(input, output, session) {
     data_filtrada |>
       get_ddd("provincia", "comuna", "costo_total_millones") |>
       hc_ddd(name = "Provincia") |>
-      hc_subtitle(text = "Provincia/Comuna")
+      hc_subtitle(text = "Provincia/Comuna") |>
+      hc_yAxis(title = list(text = "Millones"))
   })
 
   output$chart_proy_eje_area_m <- renderHighchart({
@@ -313,14 +330,15 @@ function(input, output, session) {
     data_filtrada |>
       get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total_millones") |>
       hc_ddd(name = "Eje") |>
-      hc_subtitle(text = "Eje/Área")
+      hc_subtitle(text = "Eje/Área") |>
+      hc_yAxis(title = list(text = "Millones"))
   })
 
   output$chart_tipologia_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
       count(tipologia = fct_infreq(tipologia, costo_total_millones), wt = costo_total_millones) |>
-      hchart("pie", hcaes(tipologia, n), color = fndr_pars$secondary, name = "Tipología") |>
+      hchart("pie", hcaes(tipologia, n), color = fndr_pars$secondary, name = "Millones") |>
       hc_subtitle(text = "Tipología")
   })
 
@@ -333,7 +351,7 @@ function(input, output, session) {
                  color = fndr_pars$secondary, name = "Tipología dentro del eje") |>
       hc_subtitle(text = "Tipología dentro del eje") |>
       hc_xAxis(title = list(text = "Tipología dentro del eje")) |>
-      hc_yAxis(title = list(text = "Monto millones"))
+      hc_yAxis(title = list(text = "Millones"))
     if(nrow(daux) > 10){
       hc <- hc |>
         hc_xAxis(min = 0, max = 9, scrollbar = list(enabled = TRUE))
