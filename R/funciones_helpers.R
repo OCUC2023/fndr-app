@@ -10,38 +10,38 @@ cli::cli_alert_info("funciones helpers")
 
 value_box <- partial(bslib::value_box, theme_color = "light")
 
-valor_tipologia_mag_uni <- function(data, eje){
-  daux <- data |>
-    # as_data_frame() |>
-    filter(tipologia_dentro_del_eje == eje) |>
-    select(magnitud, unidad) |>
-    reframe(
-      magnitud = round(sum(magnitud, na.rm = TRUE), 2),
-      unidad   = unique(unidad)
-    ) |>
-    # remover texto grande si es número
-    mutate(
-      magnitud = fmt_coma(magnitud),
-      unidad = ifelse(str_detect(unidad, "N°"), "", unidad)
-    )
-
-  if(nrow(daux) == 0){
-    return(tags$h2("-"))
-  }
-
-  daux |>
-    str_glue_data("{magnitud} {unidad}") |>
-    str_trim() |>
-    tags$h2()
-}
-
-value_box_tipologia <- function(data, eje){
-  value_box(
-    title = NULL,
-    value = valor_tipologia_mag_uni(data, eje),
-    eje
-  )
-}
+# valor_tipologia_mag_uni <- function(data, eje){
+#   daux <- data |>
+#     # as_data_frame() |>
+#     filter(tipologia_dentro_del_eje == eje) |>
+#     select(magnitud, unidad) |>
+#     reframe(
+#       magnitud = round(sum(magnitud, na.rm = TRUE), 2),
+#       unidad   = unique(unidad)
+#     ) |>
+#     # remover texto grande si es número
+#     mutate(
+#       magnitud = fmt_coma(magnitud),
+#       unidad = ifelse(str_detect(unidad, "N°"), "", unidad)
+#     )
+#
+#   if(nrow(daux) == 0){
+#     return(tags$h2("-"))
+#   }
+#
+#   daux |>
+#     str_glue_data("{magnitud} {unidad}") |>
+#     str_trim() |>
+#     tags$h2()
+# }
+#
+# value_box_tipologia <- function(data, eje){
+#   value_box(
+#     title = NULL,
+#     value = valor_tipologia_mag_uni(data, eje),
+#     eje
+#   )
+# }
 
 # custom nav_panel para agregar clase `ttl` al titulo
 nav_panel <- function (title, ..., value = title, icon = NULL) {

@@ -88,3 +88,4 @@ options(
   highcharter.chart = hcopts
 )
 
+rm(newlang_opts, hcopts)

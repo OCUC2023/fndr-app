@@ -65,7 +65,7 @@ page_navbar(
     DT::dataTableOutput("tabla_main")
     ),
   nav_panel(
-    title = "Mapa inciativas",
+    title = "Mapa Inciativas",
     icon  = icon("map"),
     leafletOutput("mapa_main")
     )
