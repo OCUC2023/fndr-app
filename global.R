@@ -279,21 +279,21 @@ sidebar_content <- tagList(
     )
   ),
   tags$small(uiOutput("iniciativas_seleccionadas"), class = "text-muted"),
-  tags$br(),
+  # tags$br(),
   actionButton(
     "reset_filtros",
     tags$small("Resetar filtros"),
     class = "btn-sm btn-primary",
     icon = icon("redo")
   ),
-  tags$br(),
+  # tags$br(),
   downloadButton(
     "generar_reporte",
     tags$small("Generar reporte"),
     class = "btn-sm btn-primary",
     icon = icon("file-pdf")
   ),
-  tags$br(),
+  # tags$br(),
   downloadButton(
     "descargar_datos",
     tags$small("Descargar iniciativas seleccionadas"),
