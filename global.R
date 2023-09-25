@@ -105,24 +105,36 @@ sidebar_content <- tagList(
     open = FALSE,
     multiple = FALSE,
 
-    # accordion_panel(
-    #   "Eje & Área Gobierno",
-    #   icon = icon("sitemap"),
-    #   selectizeInput(
-    #     "eje_programa_de_gobierno",
-    #     tags$small("Eje de Programa de Gobierno"),
-    #     choices = names(sort(table(data$eje_programa_de_gobierno), decreasing = TRUE)),
-    #     multiple = TRUE,
-    #     selected = NULL,
-    #     options = list(placeholder = "Todos")
-    #   ),
-    #   selectInput(
-    #     "area_dentro_del_eje",
-    #     tags$small("Área dentro del Eje"),
-    #     choices = names(sort(table(data$area_dentro_del_eje), decreasing = TRUE)),
-    #     multiple = TRUE
-    #     )
-    #   ),
+    accordion_panel(
+      "Eje & Área Gobierno",
+      icon = icon("sitemap"),
+      selectizeInput(
+        "eje_programa_de_gobierno",
+        tags$small(
+          "Eje de Programa de Gobierno",
+          tooltip(
+            info_circle,
+            "Eje de Programa de Gobierno."
+          )
+        ),
+        choices = names(sort(table(data$eje_programa_de_gobierno), decreasing = TRUE)),
+        multiple = TRUE,
+        selected = NULL,
+        options = list(placeholder = "Todos")
+      ),
+      selectInput(
+        "area_dentro_del_eje",
+        tags$small(
+          "Área dentro del Eje",
+          tooltip(
+            info_circle,
+            "Área dentro del Eje."
+          )
+        ),
+        choices = names(sort(table(data$area_dentro_del_eje), decreasing = TRUE)),
+        multiple = TRUE
+        )
+      ),
     accordion_panel(
       "Periodo",
       icon = tooltip(icon("calendar-days"), "Filtro de iniciativas según su año de aprobación o ingreso según corresponda."),

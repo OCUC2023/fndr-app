@@ -30,6 +30,10 @@ function(input, output, session) {
 
     data_filtrada <- data_filtrada |>
 
+      # eje & área gobierno
+      filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
+      filter(area_dentro_del_eje      %in% if(is.null(input$area_dentro_del_eje))      unique(data$area_dentro_del_eje)      else input$area_dentro_del_eje)      |>
+
       # etapa y fase
       filter(etapa     %in% if(is.null(input$etapa))     unique(data$etapa)     else input$etapa)     |>
       filter(fase      %in% if(is.null(input$fase))      unique(data$fase)      else input$fase)      |>
@@ -106,8 +110,8 @@ function(input, output, session) {
   observe({
     cli::cli_h2("observe reset_filtros")
 
-    # updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
-    # updateSelectInput(session, "area_dentro_eje", selected = NA)
+    updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
+    updateSelectInput(session, "area_dentro_del_eje", selected = NA)
 
     updateSelectInput(session, "ano_resolucion", selected = NA)
     updateSelectInput(session, "ano_sesion", selected = NA)
@@ -220,7 +224,7 @@ function(input, output, session) {
     #   filter(str_detect(unidad, "tricos")) |>
     #   View()
     dunimag1 <- data_filtrada |>
-      group_by(tipologia_dentro_del_eje, unidad) |>
+      group_by(eje_programa_de_gobierno, tipologia_dentro_del_eje, unidad) |>
       summarise(
         magnitud = round(sum(magnitud, na.rm = TRUE), 0),
         n = n(),
@@ -230,7 +234,7 @@ function(input, output, session) {
       mutate(magnitud = fmt_coma(magnitud))
 
     dunimag2 <- data_filtrada |>
-      group_by(tipologia_dentro_del_eje, unidad = unidad_2) |>
+      group_by(eje_programa_de_gobierno, tipologia_dentro_del_eje, unidad = unidad_2) |>
       summarise(
         magnitud = round(sum(magnitud_2, na.rm = TRUE), 0),
         n = n(),
@@ -242,11 +246,21 @@ function(input, output, session) {
     dunimag <- bind_rows(dunimag1, dunimag2)
     # dunimag <- dunimag1
 
-    vbs <- pmap(dunimag, function(tipologia_dentro_del_eje, unidad, magnitud, n){
+    vbs <- pmap(dunimag, function(eje_programa_de_gobierno, tipologia_dentro_del_eje, unidad, magnitud, n){
 
-        value_box(
-          title = tags$small(tipologia_dentro_del_eje),
-          value = tags$span(tags$h1(magnitud), tags$h6(unidad))
+      # eje_programa_de_gobierno <- "Santiago sustentable"
+      # tipologia_dentro_del_eje <- "Construcción, recuperación o mejoramiento de plazas"
+      # unidad   <- "m2"
+      # magnitud <- "289.145"
+      # n        <- 120
+
+      value_box(
+        tags$span(
+          tags$h6(tags$strong(eje_programa_de_gobierno)),
+          tags$h5(tipologia_dentro_del_eje),
+          tags$h3(magnitud, " ", unidad)
+          ),
+        value = NULL
         )
 
       })
