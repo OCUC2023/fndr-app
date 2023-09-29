@@ -24,21 +24,22 @@ source("R/funciones_helpers.R")
 
 # data --------------------------------------------------------------------
 # mail: Código lectura gdb
-st_layers(dsn = "sagir.gdb")
-st_layers(dsn = "sagir_old.gdb/")
-
-data <- st_read(dsn = "sagir.gdb", layer = "Iniciativas", as_tibble = TRUE, quiet = TRUE)
+# st_layers(dsn = "sagir.gdb")
+# st_layers(dsn = "sagir_old.gdb/")
+# data <- st_read(dsn = "sagir.gdb", layer = "Iniciativas", as_tibble = TRUE, quiet = TRUE)
+data <- st_read(
+  dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&outFields=*&f=pjson",
+  as_tibble = TRUE
+  )
 data <- data |>
   janitor::clean_names() |>
+  st_drop_geometry() |>
   # mutate(ano_de_iniciativa = ifelse(ano_de_iniciativa == 0, "-", ano_de_iniciativa)) |>
   mutate(across(where(is.character), ~as.character(forcats::fct_na_value_to_level(.x, "-")))) |>
   mutate(across(where(is.character), ~ifelse(.x == "", "-", .x))) |>
   # mutate(across(where(is.character), str_to_title)) |>
   # mutate(across(where(is.character), ~stringi::stri_trans_general(.x,  id = "Latin-ASCII"))) |>
   filter(TRUE)
-
-# data |>
-#   glimpse()
 
 data <- data |>
   rename(
@@ -66,8 +67,9 @@ data <- data |>
     )
 
 data$Shape              <- NULL
-attr(data, "sf_column") <- NULL
 attr(data, "agr")       <- NULL
+# attr(data, "sf_column") <- NULL
+
 
 # intercomunales <- st_read(dsn = "sagir_old.gdb",
 #                           layer = "Intercomunales",
@@ -81,8 +83,12 @@ attr(data, "agr")       <- NULL
 #
 # data <- left_join(data, intercomunales_aux, by = join_by(codigo))
 
-dpuntos <- st_read(dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&f=pjson",
-                   as_tibble = TRUE)
+# dpuntos <- st_read(dsn = "sagir.gdb", layer = "Iniciativas", as_tibble = TRUE, quiet = TRUE)
+
+dpuntos <- st_read(
+  dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&f=pjson",
+  as_tibble = TRUE
+  )
 dpuntos <- dpuntos |>
   st_zm() |>
   st_transform(4326) |>
