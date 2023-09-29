@@ -81,7 +81,8 @@ attr(data, "agr")       <- NULL
 #
 # data <- left_join(data, intercomunales_aux, by = join_by(codigo))
 
-dpuntos <- st_read(dsn = "sagir.gdb", layer = "Iniciativas", as_tibble = TRUE, quiet = TRUE)
+dpuntos <- st_read(dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&f=pjson",
+                   as_tibble = TRUE)
 dpuntos <- dpuntos |>
   st_zm() |>
   st_transform(4326) |>
@@ -89,8 +90,8 @@ dpuntos <- dpuntos |>
   janitor::clean_names() |>
   select(codigo = codigo_1) |>
   mutate(
-    x = st_coordinates(Shape)[,1],
-    y = st_coordinates(Shape)[,2]
+    x = st_coordinates(geometry)[,1],
+    y = st_coordinates(geometry)[,2]
   ) |>
   st_drop_geometry()
 
