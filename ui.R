@@ -5,11 +5,14 @@ page_navbar(
   fillable_mobile = TRUE,
   title = tags$span(
     class = "ttl",
-    tags$img(src = "logo.png", width = "46px", height = "auto", class = "me-3"),
-    tags$span("FNDR", tags$sup("APP"))
+    tags$img(src = "b.png", width = "150px", height = "auto", class = "me-3"),
+    # tags$span("FNDR", tags$sup("APP"))
   ),
   sidebar = sidebar(width = 300, sidebar_content),
   nav_panel(
+    tags$head(
+      tags$link(href = "favicon-32x32.png", rel = "icon"),
+    ),
     title = "Inicio",
     icon  = icon("dashboard"),
     uiOutput("hero_boxes")
