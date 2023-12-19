@@ -8,7 +8,6 @@ page_navbar(
   title = tags$span(
     class = "ttl",
     tags$img(src = "b.png", width = "150px", height = "auto", class = "me-3"),
-    # tags$span("FNDR", tags$sup("APP"))
   ),
   sidebar = sidebar(width = 300, sidebar_content),
   nav_panel(
@@ -18,20 +17,6 @@ page_navbar(
     title = "Inicio",
     icon  = icon("dashboard"),
     uiOutput("hero_boxes")
-    # layout_column_wrap(
-    #   width = 1/4,
-    #   fillable = TRUE,
-    #   fill = TRUE,
-    #   # data |> count(tipologia_dentro_del_eje, sort = TRUE) |> View()
-    #   uiOutput("hero_boxes", inline = TRUE)
-    #   # value_box(NULL, uiOutput("hero_aceras"), "Aceras"),
-    #   # value_box(NULL, uiOutput("hero_pavcal"), "Pavimentacion De Calzadas"),
-    #   # value_box(NULL, uiOutput("hero_refptn"), "Refugios Peatonales"),
-    #   # value_box(NULL, uiOutput("hero_ciclov"), "Ciclovias"),
-    #   # value_box(NULL, uiOutput("hero_lumina"), "Luminarias"),
-    #   # value_box(NULL, uiOutput("hero_bacheo"), "Bacheo De Calzadas"),
-    #   # value_box(NULL, uiOutput("hero_alarms"), "Alarmas")
-    #   )
     ),
   nav_panel(
     title = "Gráficos",

@@ -57,8 +57,9 @@ cli::cli_alert_info("Descargando data")
 #   dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/MapServer/0/query?where=1%3D1&outFields=*&f=pjson",
 #   as_tibble = TRUE
 #   )
-st_layers(dsn = "sagir.gdb")
-st_layers(dsn = "sagir_old.gdb/")
+
+
+# st_layers(dsn = "sagir_old.gdb/")
 data <- st_read(dsn = "sagir.gdb", layer = "Proyectos2023", as_tibble = TRUE, quiet = TRUE)
 
 
@@ -115,22 +116,6 @@ data <- data |>
 data$Shape              <- NULL
 attr(data, "agr")       <- NULL
 # attr(data, "sf_column") <- NULL
-
-
-# intercomunales <- st_read(dsn = "sagir_old.gdb",
-#                           layer = "Intercomunales",
-#                           as_tibble = TRUE,
-#                           quiet = TRUE)
-# intercomunales <- janitor::clean_names(intercomunales)
-# intercomunales_aux <- intercomunales |>
-#   count(codigo, sort = TRUE) |>
-#   mutate(intercomunal = TRUE) |>
-#   select(-n)
-#
-# data <- left_join(data, intercomunales_aux, by = join_by(codigo))
-
-# dpuntos <- st_read(dsn = "sagir.gdb", layer = "Iniciativas", as_tibble = TRUE, quiet = TRUE)
-
 
 # sidebar -----------------------------------------------------------------
 data |> count(eje_programa_de_gobierno)

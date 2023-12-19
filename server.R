@@ -294,14 +294,6 @@ function(input, output, session) {
 
   })
 
-  # output$hero_aceras <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Aceras"))
-  # output$hero_pavcal <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Pavimentacion De Calzadas"))
-  # output$hero_refptn <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Refugios Peatonales"))
-  # output$hero_ciclov <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Ciclovias"))
-  # output$hero_estuds <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Estudios"))
-  # output$hero_lumina <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Luminarias"))
-  # output$hero_alarms <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Alarmas"))
-  # output$hero_bacheo <- renderUI(valor_tipologia_mag_uni(data_filtrada(), "Bacheo De Calzadas"))
   # graficos ----------------------------------------------------------------
   output$chart_proy_prov_comuna <- renderHighchart({
     data_filtrada <- data_filtrada()
@@ -392,26 +384,6 @@ function(input, output, session) {
     }
     hc
   })
-
-  # output$chart_etapa_anio_m <- renderHighchart({
-  #   data_filtrada <- data_filtrada()
-  #   data_filtrada |>
-  #     get_ddd("ano_de_iniciativa", "fase_oficial", "costo_total_millones") |>
-  #     mutate(
-  #       # v1 = as.character(v1),
-  #       v2 = fct_reorder(v2, value, sum, .desc = TRUE),
-  #     ) |>
-  #     hchart(
-  #       type = "column",
-  #       hcaes(x = v1, y = value, group = v2),
-  #       stacking = 'normal'
-  #     ) |>
-  #     hc_tooltip(table = TRUE, sort = TRUE) |>
-  #     hc_xAxis(title = list(text = "")) |>
-  #     hc_yAxis(title = list(text = "")) |>
-  #     hc_subtitle(text = "Años/Etapa")
-  #
-  # })
 
   # tabla main --------------------------------------------------------------
   output$tabla_main <- renderDataTable({
@@ -533,12 +505,7 @@ function(input, output, session) {
 
     showModal(
       modalDialog(
-        fluidRow(
-          column(12, t)
-          # column(3, m),
-          # column(3, highcharts_demo()),
-          # column(3, ggplot(iris) + geom_point(aes(Sepal.Width, Sepal.Length)))
-        ),
+        fluidRow(column(12, t)),
         title = str_c(bp$codigo, bp$nombre, sep = " - "),
         size = "xl",
         footer= NULL,
