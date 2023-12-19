@@ -16,17 +16,17 @@ function(input, output, session) {
     cli::cli_inform("filtrando por años")
 
     # si todo está nulo, sin seleccionar, entonces mostramos todo! eoc filtramos
-    if(is.null(input$ano_resolucion) & is.null(input$ano_sesion) & is.null(input$ano_ingreso)){
-      xp <- rep(TRUE, nrow(data_filtrada))
-    } else {
-      # fechas con operador OR.
-      x1 <- if(is.null(input$ano_resolucion)) rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_resolucion %in% input$ano_resolucion
-      x2 <- if(is.null(input$ano_sesion))     rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_sesion     %in% input$ano_sesion
-      x3 <- if(is.null(input$ano_ingreso))    rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_ingreso    %in% input$ano_ingreso
-      xp <- x1 | x2 | x2
-    }
-
-    data_filtrada <- filter(data_filtrada, xp)
+    # if(is.null(input$ano_resolucion) & is.null(input$ano_sesion) & is.null(input$ano_ingreso)){
+    #   xp <- rep(TRUE, nrow(data_filtrada))
+    # } else {
+    #   # fechas con operador OR.
+    #   x1 <- if(is.null(input$ano_resolucion)) rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_resolucion %in% input$ano_resolucion
+    #   x2 <- if(is.null(input$ano_sesion))     rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_sesion     %in% input$ano_sesion
+    #   x3 <- if(is.null(input$ano_ingreso))    rep(FALSE, nrow(data_filtrada)) else data_filtrada$ano_ingreso    %in% input$ano_ingreso
+    #   xp <- x1 | x2 | x2
+    # }
+    #
+    # data_filtrada <- filter(data_filtrada, xp)
 
     data_filtrada <- data_filtrada |>
 
@@ -37,9 +37,11 @@ function(input, output, session) {
       filter(categoria %in% if(is.null(input$tipologia)) unique(data$categoria) else input$tipologia) |>
       filter(nivel_1   %in% if(is.null(input$categoria)) unique(data$nivel_1)   else input$categoria) |>
 
+      filter(periodo   %in% if(is.null(input$ano_periodo)) unique(data$periodo) else input$ano_periodo) |>
+
       # etapa y fase
-      filter(etapa     %in% if(is.null(input$etapa))     unique(data$etapa)     else input$etapa)     |>
-      filter(fase      %in% if(is.null(input$fase))      unique(data$fase)      else input$fase)      |>
+      # filter(etapa     %in% if(is.null(input$etapa))     unique(data$etapa)     else input$etapa)     |>
+      # filter(fase      %in% if(is.null(input$fase))      unique(data$fase)      else input$fase)      |>
 
       # área
       filter(alcance   %in% if(is.null(input$alcance))   unique(data$alcance)   else input$alcance)   |>
@@ -131,12 +133,13 @@ function(input, output, session) {
     updateSelectInput(session, "tipologia", selected = NA)
     updateSelectInput(session, "categoria", selected = NA)
 
-    updateSelectInput(session, "ano_resolucion", selected = NA)
-    updateSelectInput(session, "ano_sesion", selected = NA)
-    updateSelectInput(session, "ano_ingreso", selected = NA)
+    updateSelectInput(session, "ano_periodo", selected = NA)
+    # updateSelectInput(session, "ano_resolucion", selected = NA)
+    # updateSelectInput(session, "ano_sesion", selected = NA)
+    # updateSelectInput(session, "ano_ingreso", selected = NA)
 
-    updateSelectInput(session, "etapa", selected = NA)
-    updateSelectInput(session, "fase", selected = NA)
+    # updateSelectInput(session, "etapa", selected = NA)
+    # updateSelectInput(session, "fase", selected = NA)
 
     updateSelectInput(session, "alcance", selected = NA)
     updateSelectInput(session, "area", selected = NA)

@@ -152,7 +152,21 @@ sidebar_content <- tagList(
         multiple = TRUE,
         selected = NULL,
         options = list(placeholder = "Todos")
-      )
+      ),
+      selectizeInput(
+        "etiqueta",
+        tags$small(
+          "Etiquetas",
+          tooltip(
+            info_circle,
+            "Etiqueta (nivel2, nivel3, nivel4)."
+          )
+        ),
+        choices = setdiff(names(sort(table(c(data$nivel_2, data$nivel_3, data$nivel_4)), decreasing = TRUE)), "-"),
+        multiple = TRUE,
+        selected = NULL,
+        options = list(placeholder = "Todos")
+      ),
     ),
     # accordion_panel(
     #   "Eje & Área Gobierno",
@@ -188,74 +202,88 @@ sidebar_content <- tagList(
       "Periodo",
       icon = tooltip(icon("calendar-days"), "Filtro de iniciativas según su año de aprobación o ingreso según corresponda."),
       selectizeInput(
-        "ano_resolucion",
+        "ano_periodo",
         tags$small(
-          "Año Resolución",
+          "Año",
           tooltip(
             info_circle,
-            "Año de la resolución que aprueba la iniciativa."
+            "Año de la iniciatia (campo periodo)."
             )
           ),
-        choices = rev(sort(unique(data$ano_resolucion))),
+        choices = rev(sort(unique(data$periodo))),
         multiple = TRUE,
         selected = NULL,
         options = list(placeholder = "")
       ),
-      selectizeInput(
-        "ano_sesion",
-        tags$small(
-          "Año Sesión",
-          tooltip(
-            info_circle,
-            "Año de la sesión CORE que aprobó la iniciativa."
-            )
-          ),
-        choices = rev(sort(unique(data$ano_sesion))),
-        multiple = TRUE,
-        selected = NULL,
-        options = list(placeholder = "")
-      ),
-      selectizeInput(
-        "ano_ingreso",
-        tags$small(
-          "Año Ingreso",
-          tooltip(
-            info_circle,
-            "Año en que la iniciativa fue ingresada, aplica a iniciativas que no tienen año de resolución o sesión en el sistema."
-            )
-          ),
-        choices = rev(sort(unique(data$ano_ingreso))),
-        multiple = TRUE,
-        selected = NULL,
-        options = list(placeholder = "")
-      ),
+      # selectizeInput(
+      #   "ano_resolucion",
+      #   tags$small(
+      #     "Año Resolución",
+      #     tooltip(
+      #       info_circle,
+      #       "Año de la resolución que aprueba la iniciativa."
+      #       )
+      #     ),
+      #   choices = rev(sort(unique(data$ano_resolucion))),
+      #   multiple = TRUE,
+      #   selected = NULL,
+      #   options = list(placeholder = "")
+      # ),
+      # selectizeInput(
+      #   "ano_sesion",
+      #   tags$small(
+      #     "Año Sesión",
+      #     tooltip(
+      #       info_circle,
+      #       "Año de la sesión CORE que aprobó la iniciativa."
+      #       )
+      #     ),
+      #   choices = rev(sort(unique(data$ano_sesion))),
+      #   multiple = TRUE,
+      #   selected = NULL,
+      #   options = list(placeholder = "")
+      # ),
+      # selectizeInput(
+      #   "ano_ingreso",
+      #   tags$small(
+      #     "Año Ingreso",
+      #     tooltip(
+      #       info_circle,
+      #       "Año en que la iniciativa fue ingresada, aplica a iniciativas que no tienen año de resolución o sesión en el sistema."
+      #       )
+      #     ),
+      #   choices = rev(sort(unique(data$ano_ingreso))),
+      #   multiple = TRUE,
+      #   selected = NULL,
+      #   options = list(placeholder = "")
+      # ),
     ),
-    accordion_panel(
-      "Etapa y Fase",
-      icon = tooltip(icon("forward"), "filtro iniciativas según la etapa de postulación o la fase en que se encuentra."),
-      selectizeInput(
-        "etapa",
-        tags$small(
-          "Etapa",
-          tooltip(info_circle, "Etapa a la que postulo la iniciativa (diseño o ejecución).")
-          ),
-        choices = rev(sort(unique(data$etapa))),
-        multiple = TRUE,
-        selected = NULL,
-        options = list(placeholder = "")
-      ),
-      selectizeInput(
-        "fase",
-        tags$small(
-          "Fase",
-          tooltip(info_circle, "Si la iniciativa está aprobada o terminada.")
-          ),
-        choices = rev(sort(unique(data$fase))),
-        multiple = TRUE,
-        selected = NULL,
-        options = list(placeholder = "")
-      )
-    ),
+    # accordion_panel(
+    #   "Etapa y Fase",
+    #   icon = tooltip(icon("forward"), "filtro iniciativas según la etapa de postulación o la fase en que se encuentra."),
+    #   selectizeInput(
+    #     "etapa",
+    #     tags$small(
+    #       "Etapa",
+    #       tooltip(info_circle, "Etapa a la que postulo la iniciativa (diseño o ejecución).")
+    #       ),
+    #     choices = rev(sort(unique(data$etapa))),
+    #     multiple = TRUE,
+    #     selected = NULL,
+    #     options = list(placeholder = "")
+    #   ),
+    #   selectizeInput(
+    #     "fase",
+    #     tags$small(
+    #       "Fase",
+    #       tooltip(info_circle, "Si la iniciativa está aprobada o terminada.")
+    #       ),
+    #     choices = rev(sort(unique(data$fase))),
+    #     multiple = TRUE,
+    #     selected = NULL,
+    #     options = list(placeholder = "")
+    #   )
+    # ),
     accordion_panel(
       "Área",
       icon = tooltip(icon("location-dot"), "Filtrar iniciativas según su área geográfica."),
@@ -336,20 +364,6 @@ sidebar_content <- tagList(
             )
           ),
         placeholder = "Buscar por nombre"
-      ),
-      selectizeInput(
-        "etiqueta",
-        tags$small(
-          "Etiquetas",
-          tooltip(
-            info_circle,
-            "Etiqueta (nivel2, nivel3, nivel4)."
-          )
-        ),
-        choices = setdiff(names(sort(table(c(data$nivel_2, data$nivel_3, data$nivel_4)), decreasing = TRUE)), "-"),
-        multiple = TRUE,
-        selected = NULL,
-        options = list(placeholder = "Todos")
       ),
     )
   ),
