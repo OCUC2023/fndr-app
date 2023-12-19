@@ -348,25 +348,29 @@ function(input, output, session) {
   output$chart_proy_prov_comuna_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("provincia", "comuna", "costo_total_millones") |>
+      get_ddd("provincia", "comuna", "costo_total") |>
       hc_ddd(name = "Provincia") |>
       hc_subtitle(text = "Provincia/Comuna") |>
-      hc_yAxis(title = list(text = "Millones"))
+      hc_yAxis(title = list(text = "Millones")) |>
+      hc_yAxis(labels = list(formatter = JS("function(){return (Highcharts.numberFormat(this.value / 1000000, 0)) + ' M';}")))
+    # https://jsfiddle.net/JVNjs/210/
+
   })
 
   output$chart_proy_eje_area_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total_millones") |>
+      get_ddd("eje_programa_de_gobierno", "area_dentro_del_eje", "costo_total") |>
       hc_ddd(name = "Eje") |>
       hc_subtitle(text = "Eje/Área") |>
-      hc_yAxis(title = list(text = "Millones"))
+      hc_yAxis(title = list(text = "Millones")) |>
+      hc_yAxis(labels = list(formatter = JS("function(){return (Highcharts.numberFormat(this.value / 1000000, 0)) + ' M';}")))
   })
 
   output$chart_tipologia_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     data_filtrada |>
-      count(tipologia = fct_infreq(tipologia, costo_total_millones), wt = costo_total_millones) |>
+      count(tipologia = fct_infreq(tipologia, costo_total), wt = costo_total) |>
       hchart("pie", hcaes(tipologia, n), color = fndr_pars$secondary, name = "Millones") |>
       hc_subtitle(text = "Tipología")
   })
@@ -374,13 +378,14 @@ function(input, output, session) {
   output$chart_tipologia_dentro_eje_m <- renderHighchart({
     data_filtrada <- data_filtrada()
     daux <- data_filtrada |>
-      count(tipologia_dentro_del_eje = fct_infreq(tipologia_dentro_del_eje, costo_total_millones), wt = costo_total_millones)
+      count(tipologia_dentro_del_eje = fct_infreq(tipologia_dentro_del_eje, costo_total), wt = costo_total)
 
     hc <- hchart(daux, "bar", hcaes(tipologia_dentro_del_eje, n),
                  color = fndr_pars$secondary, name = "Tipología dentro del eje") |>
       hc_subtitle(text = "Tipología dentro del eje") |>
       hc_xAxis(title = list(text = "Tipología dentro del eje")) |>
-      hc_yAxis(title = list(text = "Millones"))
+      hc_yAxis(title = list(text = "Millones")) |>
+      hc_yAxis(labels = list(formatter = JS("function(){return (Highcharts.numberFormat(this.value / 1000000, 0)) + ' M';}")))
     if(nrow(daux) > 10){
       hc <- hc |>
         hc_xAxis(min = 0, max = 9, scrollbar = list(enabled = TRUE))
