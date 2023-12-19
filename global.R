@@ -24,17 +24,52 @@ source("R/funciones_helpers.R")
 
 # data --------------------------------------------------------------------
 # mail: Código lectura gdb
+# cli::cli_alert_info("Descargando httr")
+# g <- httr::GET("https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/MapServer/0/query?where=1%3D1&outFields=*&f=pjson")
+# g <- httr::content(g)
+# cli::cli_alert_info("httr descargada")
+
+cli::cli_alert_info("Descargando geometria")
 # st_layers(dsn = "sagir.gdb")
-# st_layers(dsn = "sagir_old.gdb/")
-# data <- st_read(dsn = "sagir.gdb", layer = "Iniciativas", as_tibble = TRUE, quiet = TRUE)
-data <- st_read(
-  dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&outFields=*&f=pjson",
-  as_tibble = TRUE
-  )
+dpuntos <-  st_read(dsn = "sagir.gdb", layer = "Proyectos2023", as_tibble = TRUE, quiet = TRUE)
+# dpuntos <- st_read(
+#   dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&f=pjson",
+#   as_tibble = TRUE
+# )
+dpuntos <- dpuntos |>
+  st_zm() |>
+  st_transform(4326) |>
+  st_cast("POINT") |>
+  janitor::clean_names() |>
+  select(codigo = codigo_1) |>
+  mutate(
+    # x = st_coordinates(geometry)[,1],
+    # y = st_coordinates(geometry)[,2]
+    x = st_coordinates(Shape)[,1],
+    y = st_coordinates(Shape)[,2]
+  ) |>
+  st_drop_geometry()
+cli::cli_alert_info("Geometría descargada")
+
+cli::cli_alert_info("Descargando data")
+# data <- st_read(
+#   # dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&outFields=*&f=pjson",
+#   dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/MapServer/0/query?where=1%3D1&outFields=*&f=pjson",
+#   as_tibble = TRUE
+#   )
+st_layers(dsn = "sagir.gdb")
+st_layers(dsn = "sagir_old.gdb/")
+data <- st_read(dsn = "sagir.gdb", layer = "Proyectos2023", as_tibble = TRUE, quiet = TRUE)
+
+
+cli::cli_alert_info("Data descargada")
+
 data <- data |>
   janitor::clean_names() |>
   st_drop_geometry() |>
+  filter(periodo_1 == 1) |>
   # mutate(ano_de_iniciativa = ifelse(ano_de_iniciativa == 0, "-", ano_de_iniciativa)) |>
+  mutate(across(where(is.character), ~str_squish(.x))) |>
   mutate(across(where(is.character), ~as.character(forcats::fct_na_value_to_level(.x, "-")))) |>
   mutate(across(where(is.character), ~ifelse(.x == "", "-", .x))) |>
   # mutate(across(where(is.character), str_to_title)) |>
@@ -50,15 +85,26 @@ data <- data |>
     # etapa,
     # comuna,
     # provincia,
-    # area_dentro_del_eje,
-    # eje_programa_de_gobierno,
-    # tipologia_dentro_del_eje,
+    area_dentro_del_eje = area_dent,
+    eje_programa_de_gobierno = eje_progra,
+    tipologia_dentro_del_eje = tipolog_1,
     # magnitud,
     # unidad,
-    # costo_total,
+    costo_total = costo_tota,
     # nombre,
     # sector,
     # sub_sector
+    convenios_glosas = convenios,
+    ano_ingreso = ano_ingre,
+    ano_resolucion = ano_resol,
+    ano_sesion = ano_sesi,
+    unidad_tecnica = unidad_te,
+    fecha_admisibilidad = fecha_admi,
+    fecha_sesion = fecha_sesi,
+    fecha_resolucion = fecha_reso,
+    marco_presupuestario = marco_pres,
+    no_resolucion = no_resolu
+    # fecha
   ) |>
   mutate(
     uno = 1,
@@ -85,21 +131,6 @@ attr(data, "agr")       <- NULL
 
 # dpuntos <- st_read(dsn = "sagir.gdb", layer = "Iniciativas", as_tibble = TRUE, quiet = TRUE)
 
-dpuntos <- st_read(
-  dsn = "https://geo.gobiernosantiago.cl/server/rest/services/Iniciativas/Iniciativas/FeatureServer/0/query?where=1%3D1&f=pjson",
-  as_tibble = TRUE
-  )
-dpuntos <- dpuntos |>
-  st_zm() |>
-  st_transform(4326) |>
-  st_cast("POINT") |>
-  janitor::clean_names() |>
-  select(codigo = codigo_1) |>
-  mutate(
-    x = st_coordinates(geometry)[,1],
-    y = st_coordinates(geometry)[,2]
-  ) |>
-  st_drop_geometry()
 
 # sidebar -----------------------------------------------------------------
 data |> count(eje_programa_de_gobierno)
@@ -113,35 +144,61 @@ sidebar_content <- tagList(
     multiple = FALSE,
 
     accordion_panel(
-      "Eje & Área Gobierno",
+      "Clasificación de iniciativas",
       icon = icon("sitemap"),
       selectizeInput(
-        "eje_programa_de_gobierno",
+        "tipologia",
         tags$small(
-          "Eje de Programa de Gobierno",
-          tooltip(
-            info_circle,
-            "Eje de Programa de Gobierno."
-          )
-        ),
-        choices = names(sort(table(data$eje_programa_de_gobierno), decreasing = TRUE)),
+          "Tipología",
+          tooltip(info_circle, "Tipología (categoría).")
+          ),
+        choices = names(sort(table(data$categoria), decreasing = TRUE)),
         multiple = TRUE,
         selected = NULL,
         options = list(placeholder = "Todos")
       ),
-      selectInput(
-        "area_dentro_del_eje",
+      selectizeInput(
+        "categoria",
         tags$small(
-          "Área dentro del Eje",
-          tooltip(
-            info_circle,
-            "Área dentro del Eje."
-          )
-        ),
-        choices = names(sort(table(data$area_dentro_del_eje), decreasing = TRUE)),
-        multiple = TRUE
-        )
-      ),
+          "Categoría",
+          tooltip(info_circle, "Categoría (nivel 1).")
+          ),
+        choices = names(sort(table(data$nivel_1), decreasing = TRUE)),
+        multiple = TRUE,
+        selected = NULL,
+        options = list(placeholder = "Todos")
+      )
+    ),
+    # accordion_panel(
+    #   "Eje & Área Gobierno",
+    #   icon = icon("sitemap"),
+    #   selectizeInput(
+    #     "eje_programa_de_gobierno",
+    #     tags$small(
+    #       "Eje de Programa de Gobierno",
+    #       tooltip(
+    #         info_circle,
+    #         "Eje de Programa de Gobierno."
+    #       )
+    #     ),
+    #     choices = names(sort(table(data$eje_programa_de_gobierno), decreasing = TRUE)),
+    #     multiple = TRUE,
+    #     selected = NULL,
+    #     options = list(placeholder = "Todos")
+    #   ),
+    #   selectInput(
+    #     "area_dentro_del_eje",
+    #     tags$small(
+    #       "Área dentro del Eje",
+    #       tooltip(
+    #         info_circle,
+    #         "Área dentro del Eje."
+    #       )
+    #     ),
+    #     choices = names(sort(table(data$area_dentro_del_eje), decreasing = TRUE)),
+    #     multiple = TRUE
+    #     )
+    #   ),
     accordion_panel(
       "Periodo",
       icon = tooltip(icon("calendar-days"), "Filtro de iniciativas según su año de aprobación o ingreso según corresponda."),
@@ -294,7 +351,21 @@ sidebar_content <- tagList(
             )
           ),
         placeholder = "Buscar por nombre"
-      )
+      ),
+      selectizeInput(
+        "etiqueta",
+        tags$small(
+          "Etiquetas",
+          tooltip(
+            info_circle,
+            "Etiqueta (nivel2, nivel3, nivel4)."
+          )
+        ),
+        choices = setdiff(names(sort(table(c(data$nivel_2, data$nivel_3, data$nivel_4)), decreasing = TRUE)), "-"),
+        multiple = TRUE,
+        selected = NULL,
+        options = list(placeholder = "Todos")
+      ),
     )
   ),
   tags$small(uiOutput("iniciativas_seleccionadas"), class = "text-muted"),
@@ -318,6 +389,7 @@ sidebar_content <- tagList(
     tags$small("Descargar iniciativas seleccionadas"),
     class = "btn-sm btn-primary",
     icon = icon("file-excel")
-    )
+    ),
+  tags$small(fndr_pars$actualizacion_datos, class = "text-muted")
   # tags$head(tags$script(HTML("$(function () { $('[data-toggle=tooltip]').tooltip() })")))
 )

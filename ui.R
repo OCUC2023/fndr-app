@@ -3,6 +3,8 @@ page_navbar(
   lang = "es",
   fillable = TRUE,
   fillable_mobile = TRUE,
+  bg = fndr_pars$primary,
+  inverse = TRUE,
   title = tags$span(
     class = "ttl",
     tags$img(src = "b.png", width = "150px", height = "auto", class = "me-3"),

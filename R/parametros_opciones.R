@@ -9,7 +9,10 @@ fndr_pars <- list(
   info      = "#F0F0F0",
   font      = "Roboto",
   font_head = "Roboto Slab",
-  font_sys  = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
+  font_sys  = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+  bg = "white",
+  fg = "#2b2d2f",
+  actualizacion_datos = str_glue("Actualización de los datos: {format(ymd(20231206), '%Y/%m/%d')}")
 )
 
 fndr_theme <- bs_theme(
@@ -18,9 +21,13 @@ fndr_theme <- bs_theme(
   primary   = fndr_pars$primary,
   secondary = fndr_pars$secondary,
   info      = fndr_pars$info ,
-  "navbar-bg" = fndr_pars$primary,
-  "tooltip-color" = "black",
-  "tooltip-bg" = "#f7f7f7",
+  bg = fndr_pars$bg,
+  fg = fndr_pars$fg,
+  "tooltip-bg" = fndr_pars$bg,
+  "tooltip-color" = fndr_pars$fg,
+
+  # "tooltip-color" = "#2b2d2f",
+  # "tooltip-bg" = "#f7f7f7",
 ) |>
   bs_add_rules(sass::sass_file("www/custom.scss"))
 

@@ -5,7 +5,7 @@ account: jbkunst
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 9243086
-bundleId: 7598522
+bundleId: 8018556
 url: https://jbkunst.shinyapps.io/fndr-app/
 asMultiple: FALSE
 asStatic: FALSE

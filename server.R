@@ -31,8 +31,11 @@ function(input, output, session) {
     data_filtrada <- data_filtrada |>
 
       # eje & área gobierno
-      filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
-      filter(area_dentro_del_eje      %in% if(is.null(input$area_dentro_del_eje))      unique(data$area_dentro_del_eje)      else input$area_dentro_del_eje)      |>
+      # filter(eje_programa_de_gobierno %in% if(is.null(input$eje_programa_de_gobierno)) unique(data$eje_programa_de_gobierno) else input$eje_programa_de_gobierno) |>
+      # filter(area_dentro_del_eje      %in% if(is.null(input$area_dentro_del_eje))      unique(data$area_dentro_del_eje)      else input$area_dentro_del_eje)      |>
+
+      filter(categoria %in% if(is.null(input$tipologia)) unique(data$categoria) else input$tipologia) |>
+      filter(nivel_1   %in% if(is.null(input$categoria)) unique(data$nivel_1)   else input$categoria) |>
 
       # etapa y fase
       filter(etapa     %in% if(is.null(input$etapa))     unique(data$etapa)     else input$etapa)     |>
@@ -48,6 +51,18 @@ function(input, output, session) {
       filter(codigo    %in% if(is.null(input$codigo))    unique(data$codigo)    else input$codigo)    |>
 
       filter(TRUE)
+
+    if(!is.null(input$etiqueta)){
+      cli::cli_inform("filtrando por etiqueta: {str_c(input$etiqueta, sep = ', ')}")
+
+      patt <- str_c(input$etiqueta, collapse = "|")
+
+      cli::cli_inform("filtrando por etiqueta: patrón {patt}")
+
+      data_filtrada <- data_filtrada |>
+        filter(str_detect(nivel_1, patt) | str_detect(nivel_2, patt) | str_detect(nivel_3, patt))
+
+    }
 
     if(input$nombre != ""){
       cli::cli_inform("filtrando por nombre: {input$nombre}")
@@ -86,7 +101,7 @@ function(input, output, session) {
         fecha_admisibilidad,
         fase,
         rate,
-        `Fehca Última Revisión` = fecha_ultima_revision,
+        # `Fecha Última Revisión` = fecha_ultima_revision,
         `Fecha Sesión` = fecha_sesion,
         `Fecha Resolución` = fecha_resolucion,
         marco_presupuestario,
@@ -110,8 +125,11 @@ function(input, output, session) {
   observe({
     cli::cli_h2("observe reset_filtros")
 
-    updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
-    updateSelectInput(session, "area_dentro_del_eje", selected = NA)
+    # updateSelectInput(session, "eje_programa_de_gobierno", selected = NA)
+    # updateSelectInput(session, "area_dentro_del_eje", selected = NA)
+
+    updateSelectInput(session, "tipologia", selected = NA)
+    updateSelectInput(session, "categoria", selected = NA)
 
     updateSelectInput(session, "ano_resolucion", selected = NA)
     updateSelectInput(session, "ano_sesion", selected = NA)
@@ -126,6 +144,7 @@ function(input, output, session) {
     updateSelectInput(session, "comuna", selected = NA)
 
     updateSelectInput(session, "codigo", selected = NA)
+    updateSelectInput(session, "etiqueta", selected = NA)
     updateTextInput(session, "nombre" , value = "")
 
   }) |>
@@ -260,7 +279,8 @@ function(input, output, session) {
           tags$h5(tipologia_dentro_del_eje),
           tags$h3(magnitud, " ", unidad)
           ),
-        value = NULL
+        value = NULL,
+        theme = value_box_theme(bg = "white", fg = fndr_pars$fg)
         )
 
       })
